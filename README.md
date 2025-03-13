@@ -8,8 +8,6 @@
 
 _CloudStream için Türkçe yayın yapan sitelere ait eklentiler.._
 
-_Kullanabilmek için kendiniz derlemelisiniz.._
-
 [Döküman](https://recloudstream.github.io/csdocs/) **━** [Resmi Site](https://dweb.link/ipns/cloudstream.on.fleek.co/) **━** [Wiki](https://cloudstream.miraheze.org/wiki/Main_Page)
 
 [![ForTheBadge made-with-kotlin](https://ForTheBadge.com/images/badges/made-with-kotlin.svg)](https://kotlinlang.org/)
@@ -20,7 +18,7 @@ _Kullanabilmek için kendiniz derlemelisiniz.._
 1. **[cloudstream/pre-release](https://github.com/recloudstream/cloudstream/releases/tag/pre-release)** _Adresinden güncel APK dosyasını indirip kurun._
 2. **Uygulamanın yüklü olduğu cihazda** _[depoyu otomatik yüklemek için tıklayın](https://keyiflerolsun.me/http-protocol-redirector?r=cloudstreamrepo://raw.githubusercontent.com/maarrem/cs-Kekik/master/repo.json)_
    - **veya**
-   - `Depo ekle` _butonuyla **manuel** ekleme yapmak isteyen arkadaşlar için_ `KekikAkademi` _**kısa kod**u mevcuttur._ `Depo ismi` _kısmını boş bırakarak_ `Depo URL'si` _kısmına_ `KekikAkademi` yazarak `Depo ekle` _demeniz yeterli.._
+   - `Depo ekle` _butonuyla **manuel** ekleme yapmak isteyen arkadaşlar için_ `kekikdevam` _**kısa kod**u mevcuttur._ `Depo ismi` _kısmını boş bırakarak_ `Depo URL'si` _kısmına_ `KekikAkademi` yazarak `Depo ekle` _demeniz yeterli.._
 
 ## 📼 Video Anlatım
 
