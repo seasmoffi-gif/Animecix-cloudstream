@@ -8,3 +8,8 @@ Arşive alınmış projenin canlıya çekilmiş hali
 2. **Uygulamanın yüklü olduğu cihazda** _[depoyu otomatik yüklemek için tıklayın](https://keyiflerolsun.me/http-protocol-redirector?r=cloudstreamrepo://raw.githubusercontent.com/maarrem/cs-Kekik/master/repo.json)_
    - **veya**
    - `Depo ekle` _butonuyla **manuel** ekleme yapmak isteyen arkadaşlar için_ `kekikdevam` _**kısa kod**u mevcuttur._ `Depo ismi` _kısmını boş bırakarak_ `Depo URL'si` _kısmına_ `kekikdevam` yazarak `Depo ekle` _demeniz yeterli.._
+  
+---
+
+- [Cloudstream 3 Repositories](https://rentry.org/cs3-repos)
+- [List of extensions](https://cloudstream.miraheze.org/wiki/List_of_extensions)
