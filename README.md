@@ -1,10 +1,10 @@
 # ☁️ CloudStream için Türkçe Eklentiler
 
-[![Boyut](https://img.shields.io/github/repo-size/keyiflerolsun/Kekik-cloudstream?logo=git&logoColor=white&label=Boyut)](#)
-[![Görüntülenme](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/keyiflerolsun/Kekik-cloudstream&title=Görüntülenme)](#)
+[![Boyut](https://img.shields.io/github/repo-size/maarrem/cs-Kekik?logo=git&logoColor=white&label=Boyut)](#)
+[![Görüntülenme](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/maarrem/cs-Kekik&title=Görüntülenme)](#)
 <a href="https://KekikAkademi.org/Kahve" target="_blank"><img src="https://img.shields.io/badge/☕️-Kahve Ismarla-ffdd00" title="☕️ Kahve Ismarla" style="padding-left:5px;"></a>
 
-[![CloudStream Derleyici](https://img.shields.io/github/actions/workflow/status/keyiflerolsun/Kekik-cloudstream/Derleyici.yml?label=CloudStream%20Derleyici&logo=github)](https://github.com/keyiflerolsun/Kekik-cloudstream/actions/workflows/Derleyici.yml)
+[![CloudStream Derleyici](https://img.shields.io/github/actions/workflow/status/maarrem/cs-Kekik/Derleyici.yml?label=CloudStream%20Derleyici&logo=github)](https://github.com/maarrem/cs-Kekik/actions/workflows/Derleyici.yml)
 
 _CloudStream için Türkçe yayın yapan sitelere ait eklentiler.._
 
@@ -18,13 +18,13 @@ _Kullanabilmek için kendiniz derlemelisiniz.._
 ## 💾 Kurulum
 
 1. **[cloudstream/pre-release](https://github.com/recloudstream/cloudstream/releases/tag/pre-release)** _Adresinden güncel APK dosyasını indirip kurun._
-2. **Uygulamanın yüklü olduğu cihazda** _[depoyu otomatik yüklemek için tıklayın](https://keyiflerolsun.me/http-protocol-redirector?r=cloudstreamrepo://raw.githubusercontent.com/keyiflerolsun/Kekik-cloudstream/master/repo.json)_
+2. **Uygulamanın yüklü olduğu cihazda** _[depoyu otomatik yüklemek için tıklayın](https://keyiflerolsun.me/http-protocol-redirector?r=cloudstreamrepo://raw.githubusercontent.com/maarrem/cs-Kekik/master/repo.json)_
    - **veya**
    - `Depo ekle` _butonuyla **manuel** ekleme yapmak isteyen arkadaşlar için_ `KekikAkademi` _**kısa kod**u mevcuttur._ `Depo ismi` _kısmını boş bırakarak_ `Depo URL'si` _kısmına_ `KekikAkademi` yazarak `Depo ekle` _demeniz yeterli.._
 
 ## 📼 Video Anlatım
 
-[![Video](https://github.com/keyiflerolsun/Kekik-cloudstream/raw/master/.github/icons/KisaKod.png?raw=True)](https://t.me/KekikAkademi/1773)
+[![Video](https://github.com/maarrem/cs-Kekik/raw/master/.github/icons/KisaKod.png?raw=True)](https://t.me/KekikAkademi/1773)
 
 ---
 
@@ -34,7 +34,7 @@ _Kullanabilmek için kendiniz derlemelisiniz.._
 
 ## 📱 Repo İçeriği
 
-[![Repo](https://github.com/keyiflerolsun/Kekik-cloudstream/raw/master/.github/icons/Repo.jpg?raw=True)](https://raw.githubusercontent.com/keyiflerolsun/Kekik-cloudstream/master/repo.json)
+[![Repo](https://github.com/maarrem/cs-Kekik/raw/master/.github/icons/Repo.jpg?raw=True)](https://raw.githubusercontent.com/maarrem/cs-Kekik/master/repo.json)
 
 ---
 
@@ -50,7 +50,7 @@ _Kullanabilmek için kendiniz derlemelisiniz.._
 ## 🌐 Telif Hakkı ve Lisans
 
 * *Copyright (C) 2023 by* [keyiflerolsun](https://github.com/keyiflerolsun) ❤️️
-* [GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007](https://github.com/keyiflerolsun/Kekik-cloudstream/blob/master/LICENSE) *Koşullarına göre lisanslanmıştır..*
+* [GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007](https://github.com/maarrem/cs-Kekik/blob/master/LICENSE) *Koşullarına göre lisanslanmıştır..*
 
 ## ♻️ İletişim
 
@@ -61,8 +61,8 @@ _Kullanabilmek için kendiniz derlemelisiniz.._
 **[☕️ Kahve Ismarla](https://KekikAkademi.org/Kahve)**
 
 ## 💻 Katkı Sağlayanlar
-<a href="https://github.com/keyiflerolsun/Kekik-cloudstream/graphs/contributors?selectedMetric=additions" target="_blank">
-  <img src="https://stg.contrib.rocks/image?repo=keyiflerolsun/Kekik-cloudstream" />
+<a href="https://github.com/maarrem/cs-Kekik/graphs/contributors?selectedMetric=additions" target="_blank">
+  <img src="https://stg.contrib.rocks/image?repo=maarrem/cs-Kekik" />
 </a>
 
 ***
