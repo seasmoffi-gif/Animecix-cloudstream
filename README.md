@@ -25,5 +25,5 @@ Arşive alınmış projenin canlıya çekilmiş hali
 ---
 
 <a href="https://github.com/maarrem/cs-Kekik/graphs/contributors?selectedMetric=additions" target="_blank">
-  <img src="https://stg.contrib.rocks/image?repo=maarrem/cs-Kekik" />
+  <img src="https://contrib.rocks/image?repo=maarrem/cs-Kekik" />
 </a>
