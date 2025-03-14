@@ -13,3 +13,5 @@ Arşive alınmış projenin canlıya çekilmiş hali
 
 - [Cloudstream 3 Repositories](https://rentry.org/cs3-repos)
 - [List of extensions](https://cloudstream.miraheze.org/wiki/List_of_extensions)
+- [Open Subtitles FAQ](https://recloudstream.github.io/csdocs/integrations/opensubtitles/)
+- [anicompat](https://youtu.be/0Gl48lL7e9Y)
