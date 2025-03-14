@@ -21,3 +21,9 @@ Arşive alınmış projenin canlıya çekilmiş hali
 ---
 
 💬 via : https://forum.sinetech.tr/
+
+---
+
+<a href="https://github.com/maarrem/cs-Kekik/graphs/contributors?selectedMetric=additions" target="_blank">
+  <img src="https://stg.contrib.rocks/image?repo=maarrem/cs-Kekik" />
+</a>
