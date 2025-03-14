@@ -9,9 +9,15 @@ Arşive alınmış projenin canlıya çekilmiş hali
    - **veya**
    - `Depo ekle` _butonuyla **manuel** ekleme yapmak isteyen arkadaşlar için_ `kekikdevam` _**kısa kod**u mevcuttur._ `Depo ismi` _kısmını boş bırakarak_ `Depo URL'si` _kısmına_ `kekikdevam` yazarak `Depo ekle` _demeniz yeterli.._
   
----
+## Faydalı Linkler
 
+- [Tanıtım Videosu](https://www.youtube.com/watch?v=CiYK7zrP00c)
 - [Cloudstream 3 Repositories](https://rentry.org/cs3-repos)
 - [List of extensions](https://cloudstream.miraheze.org/wiki/List_of_extensions)
 - [Open Subtitles FAQ](https://recloudstream.github.io/csdocs/integrations/opensubtitles/)
 - [anicompat](https://youtu.be/0Gl48lL7e9Y)
+- [Eklenti Kodlama](https://www.youtube.com/watch?v=gWECdddixyA)
+
+---
+
+via : https://forum.sinetech.tr/
