@@ -207,7 +207,7 @@ class DiziGom : MainAPI() {
                 url = source.file,
                 referer = "$mainUrl/",
                 quality = getQualityFromName(source.label),
-                isM3u8 = true
+                isM3u8 = false
             )
         )
 
