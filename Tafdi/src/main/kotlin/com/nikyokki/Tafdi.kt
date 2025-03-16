@@ -1,5 +1,3 @@
-
-
 package com.keyiflerolsun
 
 import android.util.Log
@@ -26,13 +24,17 @@ class Tafdi : MainAPI() {
         "${mainUrl}/category/belgeseller/"  to "Belgesel",
         "${mainUrl}/category/bilim-kurgu-filmleri/" to "Bilim Kurgu",
         "${mainUrl}/category/biyografi-filmleri/" to "Biyografi",
+        "${mainUrl}/category/blu-ray-filmler/" to "Blu Ray",
+        "${mainUrl}/category/cizgi-filmler/" to "Çizgi",
         "${mainUrl}/category/dram-filmleri/" to "Dran",
         "${mainUrl}/category/fantastik-filmler/" to "Fantastik",
         "${mainUrl}/category/gerilim-filmleri/" to "Gerilim",
         "${mainUrl}/category/gizem-filmleri/" to "Gizem",
+        "${mainUrl}/category/hint-filmleri/" to "Hint",
         "${mainUrl}/category/komedi-filmleri/" to "Komedi",
         "${mainUrl}/category/korku-filmleri/" to "Korku",
         "${mainUrl}/category/macera-filmleri/" to "Macera",
+        "${mainUrl}/category/muzikal-filmler/" to "Müzikal",
         "${mainUrl}/category/polisiye-filmleri/" to "Polisiye",
         "${mainUrl}/category/psikolojik-filmler/" to "Psikolojik",
         "${mainUrl}/category/romantik-filmler/" to "Romantik",
@@ -41,7 +43,6 @@ class Tafdi : MainAPI() {
         "${mainUrl}/category/tarih-filmleri/" to "Tarih",
         "${mainUrl}/category/western-filmler/" to "Western",
         "${mainUrl}/category/yerli-filmler/" to "Yerli",
-
 
     )
 
