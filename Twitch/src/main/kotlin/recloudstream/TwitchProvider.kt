@@ -1,5 +1,3 @@
-// ! https://github.com/recloudstream/extensions/blob/master/TwitchProvider/src/main/kotlin/recloudstream/TwitchProvider.kt
-
 package recloudstream
 
 import com.lagradost.cloudstream3.*
@@ -10,7 +8,7 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 import java.lang.RuntimeException
 
-class Twitch : MainAPI() {
+class TwitchProvider : MainAPI() {
     override var mainUrl              = "https://twitchtracker.com" // Easiest to scrape
     override var name                 = "Twitch"
     override val hasMainPage          = true
@@ -21,8 +19,8 @@ class Twitch : MainAPI() {
     private val isHorizontal          = true
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/channels/live" to "Top global live streams",
-        "${mainUrl}/games" to gamesName
+        "$mainUrl/channels/live"     to "Top global live streams",
+        "$mainUrl/games"             to gamesName
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -55,7 +53,7 @@ class Twitch : MainAPI() {
     }
 
     private suspend fun parseGames(): List<HomePageList> {
-        val doc = app.get("${mainUrl}/games").document
+        val doc = app.get("$mainUrl/games").document
         return doc.select("div.ranked-item")
             .take(5)
             .mapNotNull { element -> // No apmap to prevent getting 503 by cloudflare
@@ -76,7 +74,7 @@ class Twitch : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse {
         val realUrl = url.substringAfterLast("/")
-        val doc = app.get("${mainUrl}/${realUrl}", referer = mainUrl).document
+        val doc = app.get("$mainUrl/$realUrl", referer = mainUrl).document
         val name = doc.select("div#app-title").text()
         if (name.isBlank()) {
             throw RuntimeException("Could not load page, please try again.\n")
@@ -91,10 +89,10 @@ class Twitch : MainAPI() {
         val tags = listOfNotNull(
             isLive.let { if (it) "Live" else "Offline" },
             language,
-            rank?.let { "Rank: ${it}" },
+            rank?.let { "Rank: $it" },
         )
 
-        val twitchUrl = "https://twitch.tv/${realUrl}"
+        val twitchUrl = "https://twitch.tv/$realUrl"
 
         return LiveStreamLoadResponse(
             name, twitchUrl, this.name, twitchUrl, plot = description, posterUrl = image, backgroundPosterUrl = poster, tags = tags
@@ -102,7 +100,7 @@ class Twitch : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse>? {
-        val document = app.get("${mainUrl}/search", params = mapOf("q" to query), referer = mainUrl).document
+        val document = app.get("$mainUrl/search", params = mapOf("q" to query), referer = mainUrl).document
         return document.select("table.tops tr").map { it.toLiveSearchResponse() }
     }
 
