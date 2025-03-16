@@ -100,10 +100,10 @@ class IzleAI : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
     
-        // Başlık ve poster bilgilerini URL'ye göre alıyoruz
+       
 
     
-        // URL'deki "film" veya "dizi" kelimesine göre başlık ve posterde farklı işlemler yapılabilir
+       
         if (url.contains("film", ignoreCase = true)) {
             // Filmle ilgili özel işlemler
             val title = document.selectFirst("div.hidden h1")?.text() ?: return null
@@ -128,7 +128,7 @@ class IzleAI : MainAPI() {
         }
     
         if (url.contains("dizi", ignoreCase = true)) {
-            // Diziyle ilgili özel işlemler
+          
             val title = document.selectFirst("span.flex.items-start h2")?.text() ?: return null
             val poster = fixUrlNull(document.selectFirst("div.poster.hidden a.flex img")?.attr("src"))
             val year = document.selectFirst("div.w-fit span.opacity-60:nth-of-type(2)")?.text()?.toIntOrNull()
@@ -153,7 +153,7 @@ class IzleAI : MainAPI() {
             }
         }
     
-        // Eğer URL'de ne "film" ne de "dizi" varsa, null döndürülür
+        
         return null
     }
     
