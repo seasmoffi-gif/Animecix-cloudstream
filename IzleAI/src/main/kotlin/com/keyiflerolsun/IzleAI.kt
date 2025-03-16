@@ -105,7 +105,8 @@ class IzleAI : MainAPI() {
     
        
         if (url.contains("film", ignoreCase = true)) {
-            // Filmle ilgili özel işlemler
+                        
+            val tvType = TvType.Movie
             val title = document.selectFirst("div.hidden h1")?.text() ?: return null
             val poster = fixUrlNull(document.selectFirst("div.hidden img")?.attr("src"))
             val year = document.selectFirst("div.justify-between div.space-x-2 span:nth-of-type(7)")?.text()?.toIntOrNull()
@@ -128,7 +129,8 @@ class IzleAI : MainAPI() {
         }
     
         if (url.contains("dizi", ignoreCase = true)) {
-          
+            
+            val tvType = TvType.TvSeries
             val title = document.selectFirst("span.flex.items-start h2")?.text() ?: return null
             val poster = fixUrlNull(document.selectFirst("div.poster.hidden a.flex img")?.attr("src"))
             val year = document.selectFirst("div.w-fit span.opacity-60:nth-of-type(2)")?.text()?.toIntOrNull()
