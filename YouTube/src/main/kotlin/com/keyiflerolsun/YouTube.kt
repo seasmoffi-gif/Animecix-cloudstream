@@ -8,7 +8,7 @@ import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.StringUtils.encodeUri
 
 class YouTube : MainAPI() {
-    override var mainUrl              = "https://inv.nadeko.net"
+    override var mainUrl              = "https://iv.ggtyler.dev" // ! https://inv.nadeko.net
     override var name                 = "YouTube"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -78,7 +78,7 @@ class YouTube : MainAPI() {
                 "${provider.mainUrl}/watch?v=${videoId}",
                 TvType.Others
             ) {
-                this.posterUrl = "${provider.mainUrl}/vi/${videoId}/mqdefault.jpg"
+                this.posterUrl = "${provider.mainUrl}/vi/${videoId}/hqdefault.jpg"
             }
         }
     }
