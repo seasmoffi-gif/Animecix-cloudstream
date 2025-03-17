@@ -16,7 +16,7 @@ class powerSinema : MainAPI() {
     override var lang                 = "tr"
     override val hasQuickSearch       = true
     override val hasDownloadSupport   = false
-    override val supportedTypes       = setOf(TvType.Live)
+    override val supportedTypes       = setOf(TvType.Movie)
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val kanallar = IptvPlaylistParser().parseM3U(app.get(mainUrl).text)
