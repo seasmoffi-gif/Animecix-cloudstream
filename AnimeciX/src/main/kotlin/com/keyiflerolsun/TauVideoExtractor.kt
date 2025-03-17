@@ -13,26 +13,28 @@ open class TauVideo : ExtractorApi() {
     override val requiresReferer = true
 
     override suspend fun getUrl(url: String, referer: String?, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
-        val extRef   = referer ?: ""
-        val videoKey = url.split("/").last()
-        val videoUrl = "${mainUrl}/api/video/${videoKey}"
-        Log.d("Kekik_${this.name}", "videoUrl » $videoUrl")
+    val extRef = referer ?: ""
+    val videoKey = url.substringAfterLast("/").substringBefore(".")
+    val videoUrl = "$mainUrl/api/video/$videoKey"
 
-        val api = app.get(videoUrl).parsedSafe<TauVideoUrls>() ?: throw ErrorLoadingException("TauVideo")
+    Log.d("Kekik_${this.name}", "videoUrl » $videoUrl")
 
-        for (video in api.urls) {
-            callback.invoke(
-                ExtractorLink(
-                    source  = this.name,
-                    name    = this.name,
-                    url     = video.url,
-                    referer = extRef,
-                    quality = getQualityFromName(video.label),
-                    type    = INFER_TYPE
-                )
+    val api = app.get(videoUrl).parsedSafe<TauVideoUrls>() ?: throw Exception("TauVideo API'den veri alınamadı.")
+
+    for (video in api.urls) {
+        callback.invoke(
+            ExtractorLink(
+                source  = this.name,
+                name    = this.name,
+                url     = video.url,
+                referer = extRef,
+                quality = getQualityFromName(video.label),
+                type    = INFER_TYPE
             )
-        }
+        )
     }
+}
+
 
     data class TauVideoUrls(
         @JsonProperty("urls") val urls: List<TauVideoData>
