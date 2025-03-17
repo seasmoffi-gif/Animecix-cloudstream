@@ -34,7 +34,7 @@ class powerSinema : MainAPI() {
                     newLiveSearchResponse(
                         channelname,
                         LoadData(streamurl, channelname, posterurl, chGroup, nation).toJson(),
-                        type = TvType.Live
+                        type = TvType.Movie
                     ) {
                         this.posterUrl = posterurl
                         this.lang = nation
@@ -61,7 +61,7 @@ class powerSinema : MainAPI() {
             newLiveSearchResponse(
                 channelname,
                 LoadData(streamurl, channelname, posterurl, chGroup, nation).toJson(),
-                type = TvType.Live
+                type = TvType.Movie
             ) {
                 this.posterUrl = posterurl
                 this.lang = nation
@@ -96,7 +96,7 @@ class powerSinema : MainAPI() {
                 recommendations.add(newLiveSearchResponse(
                     rcChannelName,
                     LoadData(rcStreamUrl, rcChannelName, rcPosterUrl, rcChGroup, rcNation).toJson(),
-                    type = TvType.Live
+                    type = TvType.Movie
                 ) {
                     this.posterUrl = rcPosterUrl
                     this.lang = rcNation
