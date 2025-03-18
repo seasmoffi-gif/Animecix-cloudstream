@@ -1,7 +1,7 @@
-version = 2
+version = 3
 
 cloudstream {
-    authors     = listOf("nikyokki")
+    authors     = listOf("nikyokki","kerimmkirac")
     language    = "tr"
     description = "Türkçe altyazılı yabancı dizi izle, Tüm yabancı, kore, netflix dizilerin yeni ve eski sezonlarını orijinal dilinde dizigom1 alt yazılı film izleyebilir, sadece türkçe altyazılı en iyi yabancı diziler ve filmler hakkında yorum yapabilirsiniz."
 
@@ -13,6 +13,6 @@ cloudstream {
      * 3: Beta only
     **/
     status  = 1 // will be 3 if unspecified
-    tvTypes = listOf("Movie")
+    tvTypes = listOf("Movie","TvSeries")
     iconUrl = "https://www.google.com/s2/favicons?domain=dizigom1.co&sz=%size%"
 }
