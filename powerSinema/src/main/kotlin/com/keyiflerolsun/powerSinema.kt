@@ -14,7 +14,7 @@ class powerSinema : MainAPI() {
     override var lang                 = "tr"
     override val hasQuickSearch       = true
     override val hasDownloadSupport   = false
-    override val supportedTypes       = setOf(TvType.Live)
+    override val supportedTypes       = setOf(TvType.Movie)
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val kanallar = IptvPlaylistParser().parseM3U(app.get(mainUrl).text)
@@ -32,7 +32,7 @@ class powerSinema : MainAPI() {
                     newLiveSearchResponse(
                         channelname,
                         LoadData(streamurl, channelname, posterurl, chGroup, nation).toJson(),
-                        type = TvType.Live
+                        type = TvType.Movie
                     ) {
                         this.posterUrl = posterurl
                         this.lang = nation
@@ -59,7 +59,7 @@ class powerSinema : MainAPI() {
             newLiveSearchResponse(
                 channelname,
                 LoadData(streamurl, channelname, posterurl, chGroup, nation).toJson(),
-                type = TvType.Live
+                type = TvType.Movie
             ) {
                 this.posterUrl = posterurl
                 this.lang = nation
@@ -94,7 +94,7 @@ class powerSinema : MainAPI() {
                 recommendations.add(newLiveSearchResponse(
                     rcChannelName,
                     LoadData(rcStreamUrl, rcChannelName, rcPosterUrl, rcChGroup, rcNation).toJson(),
-                    type = TvType.Live
+                    type = TvType.Movie
                 ) {
                     this.posterUrl = rcPosterUrl
                     this.lang = rcNation
