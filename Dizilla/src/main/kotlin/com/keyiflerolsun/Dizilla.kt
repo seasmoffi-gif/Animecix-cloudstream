@@ -181,32 +181,29 @@ class Dizilla : MainAPI() {
         }
     }
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
-        Log.d("DZL", "data » $data")
-        val document = app.get(data).document
-        val iframes  = mutableSetOf<String>()
+override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+    Log.d("DZL", "data » $data")
+    val document = app.get(data).document
+    val iframes = mutableSetOf<String>()
 
-        val alternatifler = document.select("a[href*='player']")
-        if (alternatifler.isEmpty()) {
-            val iframe = fixUrlNull(document.selectFirst("div#playerLsDizilla iframe")?.attr("src")) ?: return false
+    val alternatifler = document.select("a[href*='player']")
+    if (alternatifler.isEmpty()) {
+        val iframe = fixUrl(document.selectFirst("div#playerLsDizilla iframe")?.attr("src") ?: return false)
+        Log.d("DZL", "iframe » $iframe")
+        loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+    } else {
+        alternatifler.forEach {
+            val playerDoc = app.get(fixUrl(it.attr("href"))).document
+            val iframe = fixUrl(playerDoc.selectFirst("div#playerLsDizilla iframe")?.attr("src") ?: return@forEach)
+
+            if (iframe in iframes) { return@forEach }
+            iframes.add(iframe)
 
             Log.d("DZL", "iframe » $iframe")
-
             loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
-        } else {
-            alternatifler.forEach {
-                val playerDoc = app.get(fixUrlNull(it.attr("href")) ?: return@forEach).document
-                val iframe    = fixUrlNull(playerDoc.selectFirst("div#playerLsDizilla iframe")?.attr("src")) ?: return false
-
-                if (iframe in iframes) { return@forEach }
-                iframes.add(iframe)
-
-                Log.d("DZL", "iframe » $iframe")
-
-                loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
-            }
         }
-
-        return true
     }
+
+    return true
+}
 }
