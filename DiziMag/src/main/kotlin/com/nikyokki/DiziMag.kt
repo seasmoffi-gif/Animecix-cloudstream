@@ -215,77 +215,85 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun loadLinks(
-    data: String,
-    isCasting: Boolean,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-): Boolean {
-    
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val headers = mapOf(
+            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Referer" to "$mainUrl/"
+        )
+        val aa = app.get(mainUrl)
+        val ciSession = aa.cookies["ci_session"].toString()
+        val document = app.get(
+            data, headers = headers, cookies = mapOf(
+                "ci_session" to ciSession
+            )
+        ).document
+        val iframe =
+            fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: return false
+        val docum = app.get(iframe, headers = headers, referer = "$mainUrl/").document
+        docum.select("script").forEach { sc ->
+            if (sc.toString().contains("bePlayer")) {
+                val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
+                val matcher = pattern.matcher(sc.toString().trimIndent())
+                if (matcher.find()) {
+                    val key = matcher.group(1)
+                    val jsonCipher = matcher.group(2)
+                    val cipherData = ObjectMapper().readValue(
+                        jsonCipher?.replace("\\/", "/"),
+                        Cipher::class.java
+                    )
+                    val ctt = cipherData.ct
+                    val iv = cipherData.iv
+                    val s = cipherData.s
+                    val decrypt = key?.let { CryptoJS.decrypt(it, ctt, iv, s) }
 
-    if (matcher.find()) {
-        
+                    val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
 
-        val videoUrl = if (jsonData.videoLocation.startsWith("http://") || jsonData.videoLocation.startsWith("https://")) {
-            jsonData.videoLocation
-        } else {
-            "https://epikplayer.xyz${jsonData.videoLocation}" 
-        }
-
-        for (sub in jsonData.strSubtitles) {
-            val subtitleUrl = if (sub.file.startsWith("http://") || sub.file.startsWith("https://")) {
-                sub.file
-            } else {
-                "https://epikplayer.xyz${sub.file}" 
+                    for (sub in jsonData.strSubtitles) {
+                        subtitleCallback.invoke(
+                            SubtitleFile(
+                                lang = sub.label.toString(),
+                                url = "https://epikplayer.xyz${sub.file}"
+                            )
+                        )
+                    }
+                    val m3u8Content = app.get(
+                        jsonData.videoLocation,
+                        referer = iframe,
+                        headers = mapOf("Accept" to "*/*", "Referer" to iframe)
+                    ).document.body()
+                    val regex = Regex("#EXT-X-STREAM-INF:.*? (https?://\\S+)")
+                    val matchResult = regex.find(m3u8Content.text())
+                    val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
+//                    callback.invoke(
+//                        ExtractorLink(
+//                            source = this.name,
+//                            name = this.name,
+//                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
+//                            url = m3uUrl,
+//                            referer = iframe,
+//                            quality = Qualities.Unknown.value,
+//                            isM3u8 = true
+//                        )
+//                    )
+                    callback.invoke(
+                        ExtractorLink(
+                            source = this.name,
+                            name = this.name,
+                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
+                            url = jsonData.videoLocation,
+                            referer = iframe,
+                            quality = Qualities.Unknown.value,
+                            isM3u8 = true
+                        )
+                    )
+                }
             }
-
-            subtitleCallback.invoke(
-                SubtitleFile(
-                    lang = sub.label.toString(),
-                    url = subtitleUrl
-                )
-            )
         }
-
-        val m3u8Content = app.get(
-            jsonData.videoLocation,
-            referer = iframe,
-            headers = mapOf("Accept" to "*/*", "Referer" to iframe)
-        ).document.body()
-
-        val regex = Regex("#EXT-X-STREAM-INF:.*? (https?://\\S+)")
-        val matchResult = regex.find(m3u8Content.text())
-        val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
-
-        if (m3uUrl.isNotEmpty()) {
-            callback.invoke(
-                ExtractorLink(
-                    source = this.name,
-                    name = this.name,
-                    headers = mapOf("Accept" to "*/*", "Referer" to iframe),
-                    url = m3uUrl,
-                    referer = iframe,
-                    quality = Qualities.Unknown.value,
-                    isM3u8 = true
-                )
-            )
-        } else {
-           
-            callback.invoke(
-                ExtractorLink(
-                    source = this.name,
-                    name = this.name,
-                    headers = mapOf("Accept" to "*/*", "Referer" to iframe),
-                    url = videoUrl,
-                    referer = iframe,
-                    quality = Qualities.Unknown.value,
-                    isM3u8 = true
-                )
-            )
-        }
-    }
-
-    
-}
 
         loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
         return true
