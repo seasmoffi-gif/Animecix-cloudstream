@@ -93,7 +93,7 @@ class YTSMX : YTS(){
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         val document = app.get(data).document
-        val TRACKER_LIST_URL="https://raw.githubusercontent.com/ngosang/trackerslist/refs/heads/master/trackers_all.txt"
+        val TRACKER_LIST_URL="https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt"
         document.select("p.hidden-md.hidden-lg a").map {
             val infoHash=it.attr("href").substringAfter("download/")
             if (infoHash.startsWith("http"))

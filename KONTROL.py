@@ -81,7 +81,7 @@ class MainUrlUpdater:
         return istek.json().get("entries", {}).get("api_url", "").replace("/api/", "")
 
     def _golgetv_ver(self):
-        istek = self.oturum.get("https://raw.githubusercontent.com/sevdaliyim/sevdaliyim/refs/heads/main/ssl2.key").text
+        istek = self.oturum.get("https://raw.githubusercontent.com/sevdaliyim/sevdaliyim/main/ssl2.key").text
         cipher = AES.new(b"trskmrskslmzbzcnfstkcshpfstkcshp", AES.MODE_CBC, b"trskmrskslmzbzcn")
         encrypted_data = base64.b64decode(istek)
         decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size).decode("utf-8")
