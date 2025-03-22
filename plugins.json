@@ -1,0 +1,42 @@
+[
+    {
+        "iconUrl": "https://anm.cx/favicon.ico",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/seasmoffi-gif/Animecix-cloudstream",
+        "fileSize": 28360,
+        "status": 1,
+        "language": "tr",
+        "authors": [
+            "keyiflerolsun",
+            "inatchii",
+            "JustRelaxable"
+        ],
+        "tvTypes": [
+            "Anime"
+        ],
+        "version": 20,
+        "internalName": "AnimeciX",
+        "description": "AnimeciX, animeleri ke\u015ffedebilece\u011finiz ve animeler hakk\u0131nda her \u015feyi \u00f6\u011frenebilece\u011finiz bir payla\u015f\u0131m platformudur.",
+        "url": "https://raw.githubusercontent.com/seasmoffi-gif/Animecix-cloudstream/builds/AnimeciX.cs3",
+        "name": "AnimeciX"
+    },
+    {
+        "iconUrl": "https://i.pinimg.com/564x/0e/33/8e/0e338eb5ba00ebca28d1330cc4902876.jpg",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/seasmoffi-gif/Animecix-cloudstream",
+        "fileSize": 22343,
+        "status": 1,
+        "language": "tr",
+        "authors": [
+            "yusiqo"
+        ],
+        "tvTypes": [
+            "Anime"
+        ],
+        "version": 20,
+        "internalName": "YusiqoCloud",
+        "description": "Dahilinde bir\u00e7ok Fansub Bar\u0131nd\u0131ran \u00d6zel Servis API (A\u00e7\u0131k Kaynak) .",
+        "url": "https://raw.githubusercontent.com/seasmoffi-gif/Animecix-cloudstream/builds/YusiqoCloud.cs3",
+        "name": "YusiqoCloud"
+    }
+]
