@@ -32,9 +32,10 @@ open class CizgiDuo : ExtractorApi() {
                 url = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
                 type = ExtractorLinkType.M3U8 // Tür olarak M3U8'yi belirtiyoruz
             ) {
-                referer = url // Referer başlığı burada ayarlandı
                 quality = Qualities.Unknown.value // Varsayılan kalite ayarlandı
-                isM3u8 = true // M3U8 akışı olduğu belirtildi
+                /* referer = url // bunun yerine headers kodunu ekledim */
+                headers = mapOf("Referer" to url) // Referer burada başlıklar üzerinden ayarlandı
+                isM3u8 = true // Varsayılanı güncellemek mümkün değilse, API'nin varsayılanı
             }
         )
     }
