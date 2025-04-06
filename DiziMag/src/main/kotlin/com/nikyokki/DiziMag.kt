@@ -298,6 +298,7 @@ class DiziMag : MainAPI() {
 //                            isM3u8 = true
 //                        )
 //                    )
+                    val myHeaders = mapOf("Accept" to "*/*", "Referer" to iframe)
                     callback.invoke(
                         newExtractorLink(
                             source = this.name,
@@ -305,7 +306,7 @@ class DiziMag : MainAPI() {
                             url = jsonData.videoLocation,
                             type = ExtractorLinkType.M3U8 // isM3u8 = true yerine ExtractorLinkType belirtiliyor
                      ) {
-                            headers = mapOf("Accept" to "*/*", "Referer" to iframe)
+                            this.headers = myHeaders
                             quality = Qualities.Unknown.value
                         }
                     )
