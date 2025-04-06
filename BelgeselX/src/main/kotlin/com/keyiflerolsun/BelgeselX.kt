@@ -156,7 +156,7 @@ class BelgeselX : MainAPI() {
                         type = INFER_TYPE // Varsayılan olarak tür atanıyor
                     ) {
                         headers = mapOf("Referer" to data) // "Referer" ayarı burada yapılabilir
-                        quality = getQualityFromName(quality) // Kaliteyi burada ayarlayın
+                        quality = getQualityFromName(quality).toString() // Int değeri String'e dönüştürülüyor
                     }
                 )
             }
