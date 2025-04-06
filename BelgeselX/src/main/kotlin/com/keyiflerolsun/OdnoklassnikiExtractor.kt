@@ -47,7 +47,7 @@ open class Odnoklassniki : ExtractorApi() {
                 type = INFER_TYPE
             ) {
                 headers = userAgent
-                quality = getQualityFromName(quality)
+                quality = getQualityFromName(quality).toString() // string dönüşümü deneyelim
                 isM3u8 = false
         }
     )
