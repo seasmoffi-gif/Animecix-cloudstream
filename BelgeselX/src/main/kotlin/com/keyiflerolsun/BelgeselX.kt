@@ -155,7 +155,7 @@ class BelgeselX : MainAPI() {
                             url     = videoUrl,
                             referer = data,
                             quality = getQualityFromName(quality),
-                            type    = INFER_TYPE
+                            type    = ExtractorLinkType.INFER_TYPE
                         )
                     )
                 }
