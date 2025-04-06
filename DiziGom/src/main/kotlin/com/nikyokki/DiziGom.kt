@@ -148,15 +148,16 @@ class DiziGom : MainAPI() {
                 ?.toIntOrNull()
                 
             episodeses.add(
-            newEpisode(
+              newEpisode(
                 data = epHref ?: "",
                 name = epName ?: "Bilinmeyen Bölüm",
                 season = epSeason ?: 1,
                 episode = epEp ?: 1
             ) {
                 this.runTime = 45 // Bölüm süresi eklenmeli
-            }
-          )
+              }
+            )
+
         }
 
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
