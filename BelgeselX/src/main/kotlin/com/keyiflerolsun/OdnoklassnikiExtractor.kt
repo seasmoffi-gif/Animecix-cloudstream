@@ -48,7 +48,10 @@ open class Odnoklassniki : ExtractorApi() {
             ) {
                 headers = userAgent
                 this.quality = getQualityFromName(quality) // `Int` olarak ayarlandı
-                isM3u8 = false // Sabit değer
+              /**
+              * varsayılan olarak false olması gerekiyor şimdilik böyle kalsın ve ellemeyelim 
+              * isM3u8 = false
+              */
         }
     )
         }
