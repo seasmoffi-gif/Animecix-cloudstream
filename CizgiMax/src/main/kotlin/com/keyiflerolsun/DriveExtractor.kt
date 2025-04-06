@@ -29,14 +29,15 @@ open class Drive : ExtractorApi() {
         Log.d("Kekik_${this.name}", "m3uLink » $m3uLink")
 
         callback.invoke(
-            ExtractorLink(
-                source  = this.name,
-                name    = this.name,
-                url     = m3uLink,
-                referer = url,
-                quality = Qualities.Unknown.value,
-                type    = INFER_TYPE
-            )
+            newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = m3uLink,
+                type = ExtractorLinkType.M3U8 // Videonun türü olarak M3U8 ayarlanıyor
+            ) {
+                headers = mapOf("Referer" to url) // Referer başlığı burada ayarlanıyor
+                quality = Qualities.Unknown.value // Kalite varsayılan olarak ayarlanıyor
+            }
         )
     }
 }
