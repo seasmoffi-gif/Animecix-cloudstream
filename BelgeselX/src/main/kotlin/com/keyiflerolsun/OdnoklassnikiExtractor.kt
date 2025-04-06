@@ -47,7 +47,7 @@ open class Odnoklassniki : ExtractorApi() {
             type = INFER_TYPE
         ) {
             headers = userAgent // Header ekliyoruz
-            this.quality = getQualityFromName(quality).toString() // String'e dönüştürüp deneyelim
+            this.quality = quality // `Int` türünde ayarlandı
             isM3u8 = false // Sabit olarak tanımlandı
          }
        )
