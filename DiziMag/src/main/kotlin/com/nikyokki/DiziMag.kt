@@ -198,12 +198,12 @@ class DiziMag : MainAPI() {
                     val epEpisode = blm++
                     val epSeason = szn
                     episodeses.add(
-                        Episode(
-                            data = epHref,
-                            name = epName,
-                            season = epSeason,
-                            episode = epEpisode
-                        )
+                        newEpisode(epHref) {
+                            this.name = epName ?: "Bilinmeyen Bölüm" // Varsayılan değer eklendi
+                            this.season = epSeason ?: 1 // Null kontrolü ve varsayılan değer
+                            this.episode = epEp ?: 1 // Null kontrolü ve varsayılan değer
+                            this.runTime = duration ?: 45 // Süre bilgisi eklendi, bulunamazsa varsayılan 45
+                        }
                     )
                 }
                 szn++
