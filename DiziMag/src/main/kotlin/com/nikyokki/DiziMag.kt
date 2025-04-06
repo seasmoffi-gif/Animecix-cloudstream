@@ -201,7 +201,7 @@ class DiziMag : MainAPI() {
                         newEpisode(epHref) {
                             this.name = epName ?: "Bilinmeyen Bölüm" // Varsayılan değer eklendi
                             this.season = epSeason ?: 1 // Null kontrolü ve varsayılan değer
-                            this.episode = epEp ?: 1 // Null kontrolü ve varsayılan değer
+                            this.episode = epEpisode ?: 1 // Doğru değişken kullanıldı
                             this.runTime = duration ?: 45 // Süre bilgisi eklendi, bulunamazsa varsayılan 45
                         }
                     )
