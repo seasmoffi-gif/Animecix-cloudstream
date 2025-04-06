@@ -39,8 +39,11 @@ open class Odnoklassniki : ExtractorApi() {
                 .replace("QUAD", "1440p")
                 .replace("ULTRA", "4k")
 
-            // `quality`'yi Int türüne çevirerek uyumluluğu sağlıyoruz
-            quality = getQualityFromName(quality).toString()
+            // quality'yi Int türüne uygun olarak ayarlıyoruz
+            quality = getQualityFromName(quality)
+
+            // isM3u8'i yeniden atanabilir hale getiriyoruz
+            var isM3u8 = false
 
             callback.invoke(
                 newExtractorLink(
@@ -50,8 +53,8 @@ open class Odnoklassniki : ExtractorApi() {
                     type = INFER_TYPE
                 ) {
                     headers = userAgent // User-Agent başlıklarını burada ekliyoruz
-                    this.quality = quality // Kaliteyi doğru şekilde ayarlıyoruz
-                    isM3u8 = false // M3U8 akışı olup olmadığını belirtiyoruz
+                    this.quality = quality // Int türünde ayarlandı
+                    this.isM3u8 = isM3u8 // Dinamik olarak ayarlandı
                 }
             )
         }
