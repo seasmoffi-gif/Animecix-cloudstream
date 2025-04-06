@@ -29,15 +29,33 @@ open class Drive : ExtractorApi() {
         Log.d("Kekik_${this.name}", "m3uLink » $m3uLink")
 
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 source = this.name,
                 name = this.name,
                 url = m3uLink,
                 type = INFER_TYPE
             ) {
-                referer = url
+                headers = mapOf("Referer" to url)
                 quality = Qualities.Unknown.value
             }
         )
     }
+}
+
+// newExtractorLink zorunluluğu için.
+suspend fun newExtractorLink(
+    source: String,
+    name: String,
+    url: String,
+    type: ExtractorLinkType? = null,
+    initializer: suspend ExtractorLink.() -> Unit = { }
+): ExtractorLink {
+    val builder = ExtractorLink(
+        source = source,
+        name = name,
+        url = url,
+        type = type ?: INFER_TYPE
+    )
+    builder.initializer()
+    return builder
 }
