@@ -305,7 +305,7 @@ class DiziMag : MainAPI() {
                             url = jsonData.videoLocation,
                             type = ExtractorLinkType.M3U8 // isM3u8 = true yerine ExtractorLinkType belirtiliyor
                      ) {
-                            this.initHeaders(mapOf("Accept" to "*/*", "Referer" to iframe)) // Headers tanımlandı
+                            headers = mapOf("Accept" to "*/*", "Referer" to iframe)
                             quality = Qualities.Unknown.value
                         }
                     )
