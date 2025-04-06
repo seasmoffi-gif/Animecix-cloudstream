@@ -35,7 +35,7 @@ open class CizgiDuo : ExtractorApi() {
                 quality = Qualities.Unknown.value // Varsayılan kalite ayarlandı
                 /* referer = url // bunun yerine headers kodunu ekledim */
                 headers = mapOf("Referer" to url) // Referer burada başlıklar üzerinden ayarlandı
-                isM3u8 = true // Varsayılanı güncellemek mümkün değilse, API'nin varsayılanı
+                /* site açılmıyor şu anda o yüzden hata vermemesi için bunu kapatıyorum isM3u8 = true */
             }
         )
     }
