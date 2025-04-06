@@ -117,56 +117,55 @@ class DiziGom : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url).document
+    val document = app.get(url).document
 
-        val title = document.selectFirst("div.serieTitle h1")?.text()?.trim() ?: return null
-        val poster = fixUrlNull(
-            document.selectFirst("div.seriePoster")?.attr("style")
-                ?.substringAfter("background-image:url(")?.substringBefore(")")
-        )
-        Log.d("DZG", "Poster: $poster")
-        val description = document.selectFirst("div.serieDescription p")?.text()?.trim()
-        val year = document.selectFirst("div.airDateYear a")?.text()?.trim()?.toIntOrNull()
-        val tags = document.select("div.genreList a").map { it.text() }
-        val rating = document.selectFirst("div.score")?.text()?.trim()?.toRatingInt()
-        val duration = document.select("div.serieMetaInformation").select("div.totalSession")
-            .last()?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
-        val actors = document.select("div.owl-stage a")
-            .map { Actor(it.text(), it.selectFirst("img")?.attr("href")) }
-        //val trailer         = Regex("""embed\/(.*)\?rel""").find(document.html())?.groupValues?.get(1)?.let { "https://www.youtube.com/embed/$it" }
+    val title = document.selectFirst("div.serieTitle h1")?.text()?.trim() ?: return null
+    val poster = fixUrlNull(
+        document.selectFirst("div.seriePoster")?.attr("style")
+            ?.substringAfter("background-image:url(")?.substringBefore(")")
+    )
+    Log.d("DZG", "Poster: $poster")
+    val description = document.selectFirst("div.serieDescription p")?.text()?.trim()
+    val year = document.selectFirst("div.airDateYear a")?.text()?.trim()?.toIntOrNull()
+    val tags = document.select("div.genreList a").map { it.text() }
+    val rating = document.selectFirst("div.score")?.text()?.trim()?.toRatingInt()
+    val duration = document.select("div.serieMetaInformation").select("div.totalSession")
+        .last()?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
+    val actors = document.select("div.owl-stage a")
+        .map { Actor(it.text(), it.selectFirst("img")?.attr("href")) }
 
-        val episodeses = mutableListOf<Episode>()
+    val episodeses = mutableListOf<Episode>()
 
-        document.select("div.bolumust").forEach {
-            val epHref = it.selectFirst("a")?.attr("href") ?: ""
-            val epName = it.selectFirst("div.bolum-ismi")?.text()
-            val epSeason =
-                it.selectFirst("div.baslik")?.text()?.split(" ")?.first()?.replace(".", "")
-                    ?.toIntOrNull()
-            val epEp = it.selectFirst("div.baslik")?.text()?.split(" ")?.get(2)?.replace(".", "")
+    document.select("div.bolumust").forEach {
+        val epHref = it.selectFirst("a")?.attr("href") ?: ""
+        val epName = it.selectFirst("div.bolum-ismi")?.text()
+        val epSeason =
+            it.selectFirst("div.baslik")?.text()?.split(" ")?.first()?.replace(".", "")
                 ?.toIntOrNull()
-            episodeses.add(
-                Episode(
-                    data = epHref,
-                    name = epName,
-                    season = epSeason,
-                    episode = epEp
-                )
-            )
-        }
-
-        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
-            this.posterUrl = poster
-            this.year = year
-            this.plot = description
-            this.tags = tags
-            this.duration = duration
-            this.rating = rating
-            addActors(actors)
-        }
-
+        val epEp = it.selectFirst("div.baslik")?.text()?.split(" ")?.get(2)?.replace(".", "")
+            ?.toIntOrNull()
+        episodeses.add(
+            newEpisode(
+                data = epHref,
+                name = epName,
+                season = epSeason,
+                episode = epEp
+            ) {
+                this.runTime = duration // Yeni runtime özelliği ayarlandı
+            }
+        )
     }
 
+    return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
+        this.posterUrl = poster
+        this.year = year
+        this.plot = description
+        this.tags = tags
+        this.duration = duration
+        this.rating = rating
+        addActors(actors)
+    }
+}
     private fun Element.toRecommendationResult(): SearchResponse? {
         val title = this.selectFirst("a img")?.attr("alt") ?: return null
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
