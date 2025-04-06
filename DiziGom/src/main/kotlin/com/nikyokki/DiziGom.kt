@@ -147,12 +147,14 @@ class DiziGom : MainAPI() {
             val epEp = it.selectFirst("div.baslik")?.text()?.split(" ")?.get(2)?.replace(".", "")
                 ?.toIntOrNull()
             episodeses.add(
-                Episode(
-                    data = epHref,
-                    name = epName,
-                    season = epSeason,
-                    episode = epEp
-                )
+            newEpisode(
+                data = epHref,
+                name = epName,
+                season = epSeason,
+                episode = epEp
+            ) {
+                this.runTime = 45 // Bölüm süresini gerçek değerle güncelleyin
+              }
             )
         }
 
