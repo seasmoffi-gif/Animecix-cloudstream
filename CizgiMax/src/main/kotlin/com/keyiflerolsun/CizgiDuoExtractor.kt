@@ -26,14 +26,16 @@ open class CizgiDuo : ExtractorApi() {
         m3uLink = Regex("""video_location":"([^"]+)""").find(encrypted)?.groupValues?.get(1)
 
         callback.invoke(
-            ExtractorLink(
-                source  = this.name,
-                name    = this.name,
-                url     = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
-                referer = url,
-                quality = Qualities.Unknown.value,
-                isM3u8  = true
-            )
+            newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
+                type = ExtractorLinkType.M3U8 // Tür olarak M3U8'yi belirtiyoruz
+            ) {
+                referer = url // Referer başlığı burada ayarlandı
+                quality = Qualities.Unknown.value // Varsayılan kalite ayarlandı
+                isM3u8 = true // M3U8 akışı olduğu belirtildi
+            }
         )
     }
 }
