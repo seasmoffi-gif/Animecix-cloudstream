@@ -29,7 +29,7 @@ open class Odnoklassniki : ExtractorApi() {
 
         val videoUrl = if (video.url.startsWith("//")) "https:${video.url}" else video.url
 
-        var quality = video.name.uppercase()
+        val quality = video.name.uppercase()
         .replace("MOBILE", "144p")
         .replace("LOWEST", "240p")
         .replace("LOW", "360p")
@@ -47,7 +47,7 @@ open class Odnoklassniki : ExtractorApi() {
             type = INFER_TYPE
         ) {
             headers = userAgent // Header ekliyoruz
-            this.quality = quality // Int türünde ayarlandı
+            this.quality = getQualityFromName(quality).toString() // String'e dönüştürüp deneyelim
             isM3u8 = false // Sabit olarak tanımlandı
          }
        )
