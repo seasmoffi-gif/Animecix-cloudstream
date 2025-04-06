@@ -297,15 +297,18 @@ class DiziMag : MainAPI() {
 //                        )
 //                    )
                     callback.invoke(
-                        ExtractorLink(
+                        newExtractorLink(
                             source = this.name,
                             name = this.name,
-                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
                             url = jsonData.videoLocation,
-                            referer = iframe,
-                            quality = Qualities.Unknown.value,
-                            isM3u8 = true
-                        )
+                            type = ExtractorLinkType.M3U8 // isM3u8 = true yerine ExtractorLinkType belirtiliyor
+                    ) {
+                            headers = mapOf(
+                            "Accept" to "*/*",
+                            "Referer" to iframe
+                            ) // Ek başlıklar ayarlandı
+                            quality = Qualities.Unknown.value // Kalite ayarlandı
+                        }
                     )
                 }
             }
