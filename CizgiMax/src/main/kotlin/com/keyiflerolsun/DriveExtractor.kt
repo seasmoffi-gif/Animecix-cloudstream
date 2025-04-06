@@ -42,21 +42,3 @@ open class Drive : ExtractorApi() {
         )
     }
 }
-
-// newExtractorLink zorunluluğu için.
-suspend fun newExtractorLink(
-    source: String,
-    name: String,
-    url: String,
-    type: ExtractorLinkType? = null,
-    initializer: suspend ExtractorLink.() -> Unit = { }
-): ExtractorLink {
-    val builder = ExtractorLink(
-        source = source,
-        name = name,
-        url = url,
-        type = type ?: INFER_TYPE
-    )
-    builder.initializer()
-    return builder
-}
