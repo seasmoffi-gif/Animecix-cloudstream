@@ -146,7 +146,7 @@ class DiziGom : MainAPI() {
             val epEp = it.selectFirst("div.baslik")?.text()?.split(" ")?.get(2)?.replace(".", "")
                 ?.toIntOrNull()
             episodeses.add(
-                newEpisode(
+                Episode(
                     data = epHref,
                     name = epName,
                     season = epSeason,
