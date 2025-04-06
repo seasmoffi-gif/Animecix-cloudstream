@@ -39,8 +39,7 @@ open class Odnoklassniki : ExtractorApi() {
         .replace("QUAD", "1440p")
         .replace("ULTRA", "4k")
 
-        quality = getQualityFromName(quality) // Int türünde dönüşüm yapıyoruz
-
+        quality = getQualityFromName(quality).toString() // String'e dönüştürülür
         var isM3u8 = false // Dinamik olarak atanabilir hale getiriyoruz
 
         callback.invoke(
