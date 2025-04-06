@@ -25,39 +25,37 @@ open class Odnoklassniki : ExtractorApi() {
         val videos = AppUtils.tryParseJson<List<OkRuVideo>>(videosStr) ?: throw ErrorLoadingException("Video not found")
 
         for (video in videos) {
-            Log.d("Kekik_${this.name}", "video » $video")
+        Log.d("Kekik_${this.name}", "video » $video")
 
-            val videoUrl = if (video.url.startsWith("//")) "https:${video.url}" else video.url
+        val videoUrl = if (video.url.startsWith("//")) "https:${video.url}" else video.url
 
-            var quality = video.name.uppercase()
-                .replace("MOBILE", "144p")
-                .replace("LOWEST", "240p")
-                .replace("LOW", "360p")
-                .replace("SD", "480p")
-                .replace("HD", "720p")
-                .replace("FULL", "1080p")
-                .replace("QUAD", "1440p")
-                .replace("ULTRA", "4k")
+        var quality = video.name.uppercase()
+        .replace("MOBILE", "144p")
+        .replace("LOWEST", "240p")
+        .replace("LOW", "360p")
+        .replace("SD", "480p")
+        .replace("HD", "720p")
+        .replace("FULL", "1080p")
+        .replace("QUAD", "1440p")
+        .replace("ULTRA", "4k")
 
-            // quality'yi Int türüne uygun olarak ayarlıyoruz
-            quality = getQualityFromName(quality)
+        quality = getQualityFromName(quality) // Int türünde dönüşüm yapıyoruz
 
-            // isM3u8'i yeniden atanabilir hale getiriyoruz
-            var isM3u8 = false
+        var isM3u8 = false // Dinamik olarak atanabilir hale getiriyoruz
 
-            callback.invoke(
-                newExtractorLink(
-                    source = this.name,
-                    name = this.name,
-                    url = videoUrl,
-                    type = INFER_TYPE
-                ) {
-                    headers = userAgent // User-Agent başlıklarını burada ekliyoruz
-                    this.quality = quality // Int türünde ayarlandı
-                    this.isM3u8 = isM3u8 // Dinamik olarak ayarlandı
-                }
-            )
-        }
+        callback.invoke(
+            newExtractorLink(
+            source = this.name,
+            name = this.name,
+            url = videoUrl,
+            type = INFER_TYPE
+        ) {
+            headers = userAgent // Header ekliyoruz
+            this.quality = quality // Int türünde kalite ayarı
+            this.isM3u8 = isM3u8 // Dinamik olarak ayarlanıyor
+         }
+       )
+     }
     }
 
     data class OkRuVideo(
