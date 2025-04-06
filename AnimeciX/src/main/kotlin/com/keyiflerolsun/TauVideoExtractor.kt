@@ -29,7 +29,7 @@ open class TauVideo : ExtractorApi() {
                 type = INFER_TYPE // Varsayılan olarak INFER_TYPE ayarlanıyor
             ) {
                 // Buraya özelleştirmeler eklenecek
-                referer = extRef
+                headers = mapOf("Referer" to extRef) // Eğer `Referer` bir header olarak ayarlanabiliyorsa
                 quality = getQualityFromName(video.label) // kalite ayarları buraya
             }
         )
