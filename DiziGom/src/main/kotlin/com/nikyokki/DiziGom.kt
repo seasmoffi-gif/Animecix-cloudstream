@@ -149,12 +149,12 @@ class DiziGom : MainAPI() {
                 
             episodeses.add(
               newEpisode(
-                data = epHref ?: "",
-                name = epName ?: "Bilinmeyen Bölüm",
-                season = epSeason ?: 1,
-                episode = epEp ?: 1
-            ) {
-                this.runTime = 45 // Bölüm süresi eklenmeli
+                url = epHref ?: "", // Bölüm bağlantısı doğru parametreyle sağlanıyor
+                name = epName ?: "Bilinmeyen Bölüm", // Null kontrolü ekleniyor
+                season = epSeason ?: 1, // Sezon bilgisi ekleniyor
+                episode = epEp ?: 1 // Bölüm bilgisi ekleniyor
+                ) {
+                this.runTime = duration ?: 45 // Süre bulunursa eklenir, bulunmazsa varsayılan değer
               }
             )
 
