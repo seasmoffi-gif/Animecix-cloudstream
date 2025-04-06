@@ -39,9 +39,6 @@ open class Odnoklassniki : ExtractorApi() {
         .replace("QUAD", "1440p")
         .replace("ULTRA", "4k")
 
-        quality = getQualityFromName(quality).toString() // String'e dönüştürülür
-        var isM3u8 = false // Dinamik olarak atanabilir hale getiriyoruz
-
         callback.invoke(
             newExtractorLink(
             source = this.name,
@@ -50,8 +47,8 @@ open class Odnoklassniki : ExtractorApi() {
             type = INFER_TYPE
         ) {
             headers = userAgent // Header ekliyoruz
-            this.quality = quality // Int türünde kalite ayarı
-            this.isM3u8 = isM3u8 // Dinamik olarak ayarlanıyor
+            this.quality = quality // Int türünde ayarlandı
+            isM3u8 = false // Sabit olarak tanımlandı
          }
        )
      }
