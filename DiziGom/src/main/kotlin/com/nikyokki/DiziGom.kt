@@ -147,14 +147,12 @@ class DiziGom : MainAPI() {
             val epEp = it.selectFirst("div.baslik")?.text()?.split(" ")?.get(2)?.replace(".", "")
                 ?.toIntOrNull()
 
-           episodeses.add(
-            newEpisode(
-                url = epHref ?: "",
-                name = epName ?: "Bilinmeyen Bölüm",
-                season = epSeason ?: 1,
-                episode = epEp ?: 1
-                    )
-         )     
+           episodeses.add(newEpisode(epHref) {
+            this.name = epName ?: "Bilinmeyen Bölüm" // Varsayılan değer eklendi
+            this.season = epSeason ?: 1 // Null kontrolü ve varsayılan değer
+            this.episode = epEp ?: 1 // Null kontrolü ve varsayılan değer
+            this.runTime = duration ?: 45 // Süre bilgisi eklendi, bulunamazsa varsayılan 45
+        })
 
         }
 
