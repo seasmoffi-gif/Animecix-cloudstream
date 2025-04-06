@@ -33,10 +33,10 @@ open class Drive : ExtractorApi() {
                 source = this.name,
                 name = this.name,
                 url = m3uLink,
-                type = ExtractorLinkType.M3U8
+                type = INFER_TYPE
             ) {
-                this.headers = mapOf("Referer" to url)
-                this.quality = Qualities.Unknown.value
+                headers = mapOf("Referer" to url) // Referer başlığı burada ayarlanıyor
+                quality = Qualities.Unknown.value // Kalite varsayılan olarak ayarlanıyor
             }
         )
     }
