@@ -35,8 +35,8 @@ open class Drive : ExtractorApi() {
                 url = m3uLink,
                 type = INFER_TYPE
             ) {
-                headers = mapOf("Referer" to url) // Referer başlığı burada ayarlanıyor
-                quality = Qualities.Unknown.value // Kalite varsayılan olarak ayarlanıyor
+                referer = url
+                quality = Qualities.Unknown.value
             }
         )
     }
