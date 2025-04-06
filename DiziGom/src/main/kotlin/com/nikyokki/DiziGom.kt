@@ -202,14 +202,15 @@ class DiziGom : MainAPI() {
 
         val source: Go = objectMapper.readValue(sourceJ!!)
         callback.invoke(
-            ExtractorLink(
-                source = this.name,
-                name = this.name,
-                url = source.file,
-                referer = "$mainUrl/",
-                quality = getQualityFromName(source.label),
-                isM3u8 = true
-            )
+          newExtractorLink(
+            source = this.name,
+            name = this.name,
+            url = source.file,
+            type = ExtractorLinkType.M3U8 // HLS oynatma türü
+           ) {
+            headers = mapOf("Referer" to "$mainUrl/") // Referer burada ayarlandı
+            quality = getQualityFromName(source.label) // Kalite doğru şekilde ayarlandı
+             }
         )
 
         return true
