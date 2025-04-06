@@ -45,10 +45,10 @@ open class Odnoklassniki : ExtractorApi() {
                 name = this.name,
                 url = videoUrl,
                 type = INFER_TYPE
-                headers = userAgent  
             ) {
-                this.quality = quality // `Int` türünde ayarlandı
-                isM3u8 = false // Sabit olarak tanımlandı
+                headers = userAgent
+                quality = getQualityFromName(quality)
+                isM3u8 = false
         }
     )
         }
