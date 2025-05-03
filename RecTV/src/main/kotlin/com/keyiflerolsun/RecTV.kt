@@ -150,10 +150,10 @@ class RecTV : MainAPI() {
                     name    = this.name,
                     url     = data,
                     type    = INFER_TYPE
-			) {
-                headers = mapOf("Referer" to "https://twitter.com/")
-                quality = Qualities.Unknown.value
-            }
+                ) {
+                    this.referer = "https://twitter.com/"
+                    this.quality = Qualities.Unknown.value
+                }
             )
             return true
         }

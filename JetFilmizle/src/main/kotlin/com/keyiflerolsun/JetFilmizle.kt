@@ -17,12 +17,12 @@ class JetFilmizle : MainAPI() {
     override val supportedTypes       = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/page/"                                         to "Son Filmler",
-        "${mainUrl}/netflix/page/"                                 to "Netflix",
-        "${mainUrl}/editorun-secimi/page/"                         to "Editörün Seçimi",
-        "${mainUrl}/turk-film-full-hd-izle/page/"                  to "Türk Filmleri",
-        "${mainUrl}/cizgi-filmler-full-izle/page/"                 to "Çizgi Filmler",
-        "${mainUrl}/kategoriler/yesilcam-filmleri-full-izle/page/" to "Yeşilçam Filmleri"
+        "${mainUrl}/page/"                                     to "Son Filmler",
+        "${mainUrl}/netflix/page/"                             to "Netflix",
+        "${mainUrl}/editorun-secimi/page/"                     to "Editörün Seçimi",
+        "${mainUrl}/turk-film-full-hd-izle/page/"                      to "Türk Filmleri",
+        "${mainUrl}/cizgi-filmler-izle/page/"                  to "Çizgi Filmler",
+        "${mainUrl}/kategoriler/yesilcam-filmleri-izlee/page/" to "Yeşilçam Filmleri"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -99,26 +99,32 @@ class JetFilmizle : MainAPI() {
         val document = app.get(data).document
 
         val iframes    = mutableListOf<String>()
-        val iframe = fixUrlNull(document.selectFirst("div#movie iframe")?.attr("data-litespeed-src")) ?: fixUrlNull(document.selectFirst("div#movie iframe")?.attr("src"))
-        Log.d("JTF", "iframe » $iframe")
-        if (iframe != null) {
-            iframes.add(iframe)
+        val mainIframe = fixUrlNull(document.selectFirst("div#movie iframe")?.attr("data-src")) ?: fixUrlNull(document.selectFirst("div#movie iframe")?.attr("data")) ?: fixUrlNull(document.selectFirst("div#movie iframe")?.attr("src"))
+        Log.d("JTF", "mainIframe » $mainIframe")
+        if (mainIframe != null) {
+            iframes.add(mainIframe)
         }
 
-        document.select("a.download-btn[href]").forEach downloadLinkForEach@{ link ->
-            val href = link.attr("href")
-            if (!href.contains("pixeldrain.com")) return@downloadLinkForEach
+        document.select("div.film_part a").forEach {
+            val source = it.selectFirst("span")?.text()?.trim() ?: return@forEach
+            if (source.lowercase().contains("fragman")) return@forEach
+
+            val movDoc = app.get(it.attr("href")).document
+            val iframe = fixUrlNull(movDoc.selectFirst("div#movie iframe")?.attr("data-src")) ?: fixUrlNull(movDoc.selectFirst("div#movie iframe")?.attr("data")) ?: fixUrlNull(movDoc.selectFirst("div#movie iframe")?.attr("src"))
             Log.d("JTF", "iframe » $iframe")
-		
-            val downloadLink = fixUrlNull(href) ?: return@downloadLinkForEach
 
             if (iframe != null) {
-                iframes.add(downloadLink)
+                iframes.add(iframe)
+            } else {
+                movDoc.select("div#movie p a").forEach downloadLinkForEach@{ link ->
+                    val downloadLink = fixUrlNull(link.attr("href")) ?: return@downloadLinkForEach
+                    iframes.add(downloadLink)
+                }
             }
         }
 
         for (iframe in iframes) {
-            if (iframe.contains("zupeo.com")) {
+            if (iframe.contains("jetv.xyz")) {
                 Log.d("JTF", "jetv » $iframe")
                 val jetvDoc    = app.get(iframe).document
                 val jetvIframe = fixUrlNull(jetvDoc.selectFirst("iframe")?.attr("src")) ?: continue

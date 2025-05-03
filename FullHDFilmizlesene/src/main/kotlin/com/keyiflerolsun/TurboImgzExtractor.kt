@@ -23,10 +23,10 @@ open class TurboImgz : ExtractorApi() {
                 source  = "${this.name} - " + url.substringBefore("||").uppercase(),
                 name    = "${this.name} - " + url.substringBefore("||").uppercase(),
                 url     = videoLink,
-                type = ExtractorLinkType.M3U8
+                ExtractorLinkType.M3U8
             ) {
-                quality = Qualities.Unknown.value
-                headers = mapOf("Referer" to extRef)
+                this.referer = extRef
+                this.quality = Qualities.Unknown.value
             }
         )
     }

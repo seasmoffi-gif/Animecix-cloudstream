@@ -226,16 +226,15 @@ class DiziPal : MainAPI() {
 
         callback.invoke(
             newExtractorLink(
-        source = this.name,
-        name = this.name,
-        url = m3uLink,
-        type = ExtractorLinkType.M3U8
-        ) {
-        headers = mapOf("Referer" to "${mainUrl}/")
-        quality = Qualities.Unknown.value
-          }
+                source  = this.name,
+                name    = this.name,
+                url     = m3uLink,
+                ExtractorLinkType.M3U8
+            ) {
+                this.referer = "${mainUrl}/"
+                this.quality = Qualities.Unknown.value
+            }
         )
-
 
         // M3u8Helper.generateM3u8(
         //     source    = this.name,

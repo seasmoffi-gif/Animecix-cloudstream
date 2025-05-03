@@ -60,9 +60,9 @@ open class TRsTX : ExtractorApi() {
                     url     = m3uLink,
                     type    = INFER_TYPE
                 ) {
-                quality = Qualities.Unknown.value
-                headers = mapOf("Referer" to extRef)
-            }
+                    this.referer = extRef
+                    this.quality = Qualities.Unknown.value
+                }
             )
         }
     }

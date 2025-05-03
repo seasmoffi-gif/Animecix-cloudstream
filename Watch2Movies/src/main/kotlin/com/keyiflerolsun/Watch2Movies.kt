@@ -125,10 +125,10 @@ class Watch2Movies : MainAPI() {
         val document = app.get("${mainUrl}/ajax/episode/list/${epId}", referer=data).document
 
         document.select("li.nav-item a").forEach {
-            val dataId     = it.attr("data-id")
+            val dataId     = it.attr("data-linkid")
             Log.d("W2M", "dataId » $dataId")
-            val modifiedData = data.replace("/movie/", "/watch-movie/")
-            loadExtractor("${modifiedData}.${dataId}", "$mainUrl/", subtitleCallback, callback)
+            loadExtractor("${data}.${dataId}", "${mainUrl}/", subtitleCallback, callback)
+
             // val dataSource = app.get("${mainUrl}/ajax/episode/sources/${dataId}", referer=data).parsedSafe<Sources>()
             // Log.d("W2M", "iframe » ${dataSource!!.link}")
 

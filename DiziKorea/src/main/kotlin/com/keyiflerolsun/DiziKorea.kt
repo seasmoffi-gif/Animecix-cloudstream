@@ -24,7 +24,8 @@ class DiziKorea : MainAPI() {
         "${mainUrl}/tayland-dizileri/"    to "Tayland Dizileri",
         "${mainUrl}/tayland-filmleri/"    to "Tayland Filmleri",
         "${mainUrl}/cin-dizileri/"        to "Çin Dizileri",
-        "${mainUrl}/cin-filmleri/"        to "Çin Filmleri"
+        "${mainUrl}/cin-filmleri/"        to "Çin Filmleri",
+        "${mainUrl}/yabanci-dizi/"        to "Yabancı Dizi"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {

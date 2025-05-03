@@ -24,11 +24,11 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.JsUnpacker
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 class DiziGom : MainAPI() {
@@ -146,14 +146,14 @@ class DiziGom : MainAPI() {
                     ?.toIntOrNull()
             val epEp = it.selectFirst("div.baslik")?.text()?.split(" ")?.get(2)?.replace(".", "")
                 ?.toIntOrNull()
-
-           episodeses.add(newEpisode(epHref) {
-            this.name = epName ?: "Bilinmeyen Bölüm" // Varsayılan değer eklendi
-            this.season = epSeason ?: 1 // Null kontrolü ve varsayılan değer
-            this.episode = epEp ?: 1 // Null kontrolü ve varsayılan değer
-            this.runTime = duration ?: 45 // Süre bilgisi eklendi, bulunamazsa varsayılan 45
-        })
-
+            episodeses.add(
+                Episode(
+                    data = epHref,
+                    name = epName,
+                    season = epSeason,
+                    episode = epEp
+                )
+            )
         }
 
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
@@ -205,15 +205,15 @@ class DiziGom : MainAPI() {
         val source: Go = objectMapper.readValue(sourceJ!!)
         callback.invoke(
             newExtractorLink(
-            source = this.name,
-            name = this.name,
-            url = source.file,
-            type = ExtractorLinkType.M3U8
-        ) {
-            headers = mapOf("Referer" to "$mainUrl/")
-            quality = getQualityFromName(source.label)
-        }
-    )
+                source = this.name,
+                name = this.name,
+                url = source.file,
+                ExtractorLinkType.M3U8
+            ) {
+                this.referer = "$mainUrl/"
+                this. quality = getQualityFromName(source.label)
+            }
+        )
 
         return true
     }

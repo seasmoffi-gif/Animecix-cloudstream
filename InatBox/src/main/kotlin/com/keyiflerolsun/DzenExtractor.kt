@@ -1,6 +1,3 @@
-
-// ! Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
-
 package com.keyiflerolsun
 
 import android.util.Log
@@ -10,8 +7,8 @@ import com.lagradost.cloudstream3.APIHolder.capitalize
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 
-class DzenRu : ExtractorApi(){
-    override val name            = "DzenRu"
+class Dzen : ExtractorApi(){
+    override val name            = "Dzen"
     override val mainUrl         = "https://dzen.ru/"
     override val requiresReferer = false
 

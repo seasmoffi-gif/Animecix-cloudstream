@@ -19,17 +19,18 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.fixUrl
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.util.regex.Pattern
@@ -199,10 +200,9 @@ class DiziMag : MainAPI() {
                     val epSeason = szn
                     episodeses.add(
                         newEpisode(epHref) {
-                            this.name = epName ?: "Bilinmeyen Bölüm" // Varsayılan değer eklendi
-                            this.season = epSeason ?: 1 // Null kontrolü ve varsayılan değer
-                            this.episode = epEpisode ?: 1 // Doğru değişken kullanıldı
-                            this.runTime = duration ?: 45 // Süre bilgisi eklendi, bulunamazsa varsayılan 45
+                            this.name = epName
+                            this.season = epSeason
+                            this.episode = epEpisode
                         }
                     )
                 }
@@ -279,35 +279,17 @@ class DiziMag : MainAPI() {
                             )
                         )
                     }
-                    val m3u8Content = app.get(
-                        jsonData.videoLocation,
-                        referer = iframe,
-                        headers = mapOf("Accept" to "*/*", "Referer" to iframe)
-                    ).document.body()
-                    val regex = Regex("#EXT-X-STREAM-INF:.*? (https?://\\S+)")
-                    val matchResult = regex.find(m3u8Content.text())
-                    val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
-//                    callback.invoke(
-//                        ExtractorLink(
-//                            source = this.name,
-//                            name = this.name,
-//                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
-//                            url = m3uUrl,
-//                            referer = iframe,
-//                            quality = Qualities.Unknown.value,
-//                            isM3u8 = true
-//                        )
-//                    )
-                    val myHeaders = mapOf("Accept" to "*/*", "Referer" to iframe)
+
                     callback.invoke(
                         newExtractorLink(
                             source = this.name,
                             name = this.name,
                             url = jsonData.videoLocation,
-                            type = ExtractorLinkType.M3U8 // isM3u8 = true yerine ExtractorLinkType belirtiliyor
-                     ) {
-                            this.headers = myHeaders
-                            quality = Qualities.Unknown.value
+                            ExtractorLinkType.M3U8
+                        ) {
+                            this.headers = mapOf("Accept" to "*/*", "Referer" to iframe)
+                            this.referer = iframe
+                            this.quality = Qualities.Unknown.value
                         }
                     )
                 }
