@@ -1,8 +1,31 @@
 package com.keyiflerolsun
 
 import android.util.Log
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.DubStatus
+import com.lagradost.cloudstream3.Episode
+import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LiveStreamLoadResponse
+import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SeasonData
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newAnimeLoadResponse
+import com.lagradost.cloudstream3.newEpisode
+import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newLiveSearchResponse
+import com.lagradost.cloudstream3.newLiveStreamLoadResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.Interceptor
 import org.json.JSONArray
 import java.net.URI
@@ -40,7 +63,7 @@ class InatBox : MainAPI() {
         "${contentUrl}/tv/dini.php"                           to "Dini Kanallar",
         "${contentUrl}/ex/index.php"                          to "EXXEN",
         "${contentUrl}/ga/index.php"                          to "Gain",
-        "${contentUrl}/blu/index.php"                         to "BluTV",
+        "${contentUrl}/max/index.php"                         to "Max-BluTV",
         "${contentUrl}/nf/index.php"                          to "Netflix",
         "${contentUrl}/dsny/index.php"                        to "Disney+",
         "${contentUrl}/amz/index.php"                         to "Amazon Prime",
@@ -338,7 +361,8 @@ class InatBox : MainAPI() {
             val reg = chContent.chReg
             val type = chContent.chType
 
-            val jsonResponse = runCatching { makeInatRequest(url) }.getOrNull() ?: getJsonFromEncryptedInatResponse(app.get(url).text) ?: return
+            val jsonResponse = runCatching { makeInatRequest(url) }.getOrNull()
+    ?: getJsonFromEncryptedInatResponse(app.get(url).body?.string() ?: "") ?: return
             val firstItem = JSONObject(jsonResponse)
             firstItem.put("chHeaders", headers)
             firstItem.put("chReg", reg)
@@ -372,10 +396,22 @@ class InatBox : MainAPI() {
         }
 
         val extractorFound =
-            loadExtractor(sourceUrl, headers["Referer"], subtitleCallback){
-                callback.invoke(
-                    ExtractorLink(source = it.source,name = contentToProcess.chName, url = it.url, referer = it.referer, quality = it.quality, headers = it.headers, type = it.type)
-                )
+            if (sourceUrl.contains("dzen.ru")) {
+                 loadExtractor(sourceUrl,subtitleCallback,callback)
+             } else {
+                 loadExtractor(sourceUrl, headers["Referer"], subtitleCallback) {
+                     callback.invoke(
+                         ExtractorLink(
+                             source = it.source,
+                             name = contentToProcess.chName,
+                             url = it.url,
+                             referer = it.referer,
+                             quality = it.quality,
+                             headers = it.headers,
+                             type = it.type
+                         )
+                     )
+                 }
             }
 
         //When no extractor found, try to load as generic
@@ -428,7 +464,7 @@ class InatBox : MainAPI() {
         )
 
         if (response.isSuccessful) {
-            val encryptedResponse = response.text
+            val encryptedResponse = response.body?.string() ?: ""
             // Log.d("InatBox", "Encrypted response: ${encryptedResponse}")
             return getJsonFromEncryptedInatResponse(encryptedResponse)
         } else {

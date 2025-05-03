@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import java.io.InputStream
 
 class CanliTV : MainAPI() {
-    override var mainUrl              = "https://raw.githubusercontent.com/ramazansancar/keyiflerolsun_IPTV_YenirMi/main/Kanallar/KekikAkademi.m3u"
+    override var mainUrl              = "https://raw.githubusercontent.com/feroxx/IPTV_YenirMi/main/Kanallar/KekikAkademi.m3u"
     override var name                 = "CanliTV"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -122,15 +122,17 @@ class CanliTV : MainAPI() {
         Log.d("IPTV", "kanal » $kanal")
 
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 source  = this.name,
                 name    = this.name,
                 url     = loadData.url,
-                headers = kanal.headers,
-                referer = kanal.headers["referrer"] ?: "",
-                quality = Qualities.Unknown.value,
-                type    = ExtractorLinkType.M3U8
-            )
+
+                     type = ExtractorLinkType.M3U8
+                 ) {
+                     this.referer = kanal.headers["referrer"] ?: ""
+                     this.headers = kanal.headers
+                     quality = Qualities.Unknown.value
+                 }
         )
 
         return true

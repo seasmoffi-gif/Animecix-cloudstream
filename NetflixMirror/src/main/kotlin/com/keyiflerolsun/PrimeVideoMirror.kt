@@ -5,6 +5,7 @@ package com.keyiflerolsun
 import android.util.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 import com.keyiflerolsun.entities.EpisodesData
 import com.keyiflerolsun.entities.PlayList
 import com.keyiflerolsun.entities.PostData
@@ -17,7 +18,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 class PrimeVideoMirror : MainAPI() {
-    override var mainUrl              = "https://iosmirror.cc"
+    override var mainUrl              = "https://netfree2.cc/mobile"
     override var name                 = "PrimeVideoMirror"
     override val hasMainPage          = true
     override var lang                 = "hi"
@@ -210,14 +211,15 @@ class PrimeVideoMirror : MainAPI() {
         playlist.forEach { item ->
             item.sources.forEach {
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         name,
                         it.label,
                         fixUrl(it.file),
-                        "${mainUrl}/",
-                        getQualityFromName(it.file.substringAfter("q=", "")),
-                        true
-                    )
+                        type = ExtractorLinkType.M3U8
+                     ) {
+                         this.referer = "$mainUrl/"
+                         this.quality = getQualityFromName(it.file.substringAfter("q=", ""))
+                     }
                 )
             }
 

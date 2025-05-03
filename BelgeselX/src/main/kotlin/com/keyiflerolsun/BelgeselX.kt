@@ -15,7 +15,7 @@ class BelgeselX : MainAPI() {
     override var lang                 = "tr"
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Documentary)
-
+	
     override val mainPage = mainPageOf(
         "${mainUrl}/konu/turk-tarihi-belgeselleri&page=" to "Türk Tarihi",
         "${mainUrl}/konu/tarih-belgeselleri&page="		 to "Tarih",
@@ -39,8 +39,8 @@ class BelgeselX : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}${page}").document
-        val home     = document.select("div.gen-movie-contain").mapNotNull { it.toSearchResult() }
+        val document = app.get("${request.data}${page}", cacheTime = 60).document
+        val home     = document.select("div.gen-movie-contain > div.gen-info-contain > div.gen-movie-info").mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(request.name, home)
     }
@@ -53,9 +53,9 @@ class BelgeselX : MainAPI() {
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title     = this.selectFirst("h3 a")?.text()?.trim()?.toTitleCase() ?: return null
-        val href      = fixUrlNull(this.selectFirst("h3 a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val title     = this.selectFirst("div.gen-movie-info > h3 a")?.text()?.trim()?.toTitleCase() ?: return null
+        val href      = fixUrlNull(this.selectFirst("div.gen-movie-info > h3 a")?.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.parent()?.parent()?.selectFirst("div.gen-movie-img > img")?.attr("src"))
 
         return newTvSeriesSearchResponse(title, href, TvType.Documentary) { this.posterUrl = posterUrl }
     }
@@ -67,9 +67,8 @@ class BelgeselX : MainAPI() {
         val cseLibVersion = Regex("""cselibVersion": "(.*)"""").find(tokenResponse.text)?.groupValues?.get(1)
         val cseToken      = Regex("""cse_token": "(.*)"""").find(tokenResponse.text)?.groupValues?.get(1)
 
-        val response = app.get("https://cse.google.com/cse/element/v1?rsz=filtered_cse&num=100&hl=tr&source=gcsc&cselibv=${cseLibVersion}&cx=${cx}&q=${query}&safe=off&cse_tok=${cseToken}&oq=${query}&callback=google.search.cse.api9969&rurl=https%3A%2F%2Fbelgeselx.com%2F")
-        Log.d("BLX","Search result: ${response.text}")
-
+        val response = app.get("https://cse.google.com/cse/element/v1?rsz=filtered_cse&num=100&hl=tr&source=gcsc&cselibv=${cseLibVersion}&cx=${cx}&q=${query}&safe=off&cse_tok=${cseToken}&sort=&exp=cc%2Capo&oq=${query}&callback=google.search.cse.api9969&rurl=https%3A%2F%2Fbelgeselx.com%2F")
+        Log.d("BLX", "response » $response")
         val titles     = Regex(""""titleNoFormatting": "(.*)"""").findAll(response.text).map { it.groupValues[1] }.toList()
         val urls       = Regex(""""url": "(.*)"""").findAll(response.text).map { it.groupValues[1] }.toList()
         val posterUrls = Regex(""""ogImage": "(.*)"""").findAll(response.text).map { it.groupValues[1] }.toList()
@@ -81,12 +80,15 @@ class BelgeselX : MainAPI() {
             val url       = urls.getOrNull(i) ?: continue
             val posterUrl = posterUrls.getOrNull(i) ?: continue
 
-            if(!url.contains("belgeseldizi")) continue
-            searchResponses.add(newTvSeriesSearchResponse(title,url,TvType.Documentary) {
+        if (url.contains("belgesel")) {
+            val modifiedUrl = url.replace("/belgesel/", "/belgeseldizi/")
+            searchResponses.add(newTvSeriesSearchResponse(title, modifiedUrl, TvType.Documentary) {
                 this.posterUrl = posterUrl
             })
+        } else {
+            continue
         }
-
+        }
         return searchResponses
     }
 
@@ -127,47 +129,53 @@ class BelgeselX : MainAPI() {
         }
     }
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
     Log.d("BLX", "data » $data")
+    
     val source = app.get(data)
 
-    Regex("""<iframe\s+[^>]*src=\\"([^\\"']+)\\"""").findAll(source.text).forEach { alternatifUrlMatchResult ->
-        val alternatifUrl = alternatifUrlMatchResult.groupValues[1]
-        Log.d("BLX", "alternatifUrl » $alternatifUrl")
-        val alternatifResp = app.get(alternatifUrl, referer = data)
+    // Sayfa kaynağından ilk fnc_addWatch içeren div elemanının data-episode numarasını al
+    val firstEpisodeId = Regex("""<div[^>]*class=["'][^"']*fnc_addWatch[^"']*["'][^>]*data-episode=["'](\d+)["']""")
+        .find(source.text)?.groupValues?.get(1)
 
-        if (alternatifUrl.contains("new4.php")) {
-            Regex("""file:"([^"]+)", label: "([^"]+)""").findAll(alternatifResp.text).forEach {
-                var thisName = this.name
-                val videoUrl = it.groupValues[1]
-                var quality = it.groupValues[2]
-                if (quality == "FULL") {
-                    quality = "1080p"
-                    thisName = "Google"
-                }
-                Log.d("BLX", "quality » $quality")
-                Log.d("BLX", "videoUrl » $videoUrl")
+    if (firstEpisodeId == null) {
+        Log.e("BLX", "İlk fnc_addWatch data-episode bulunamadı.")
+        return false
+    }
 
-                callback.invoke(
-                    newExtractorLink(
-                        source = thisName,
-                        name = thisName,
-                        url = videoUrl,
-                        type = INFER_TYPE // Varsayılan olarak tür atanıyor
-                    ) {
-                        headers = mapOf("Referer" to data) // "Referer" ayarı burada yapılabilir
-                        quality = getQualityFromName(quality).toString() // Int değeri String'e dönüştürülüyor
-                    }
-                )
-            }
-        } else {
-            val iframe = fixUrlNull(alternatifResp.document.selectFirst("iframe")?.attr("src")) ?: return@forEach
-            Log.d("BLX", "iframe » $iframe")
+    Log.d("BLX", "İlk fnc_addWatch data-episode: $firstEpisodeId")
+    
+    // Bu ID ile iframe URL’si oluştur
+    val iframeUrl = "https://belgeselx.com/video/data/new4.php?id=$firstEpisodeId"
+    Log.d("BLX", "iframeUrl oluşturuldu » $iframeUrl")
+    
+    // iframe URL’si üzerinden veriyi al
+    val alternatifResp = app.get(iframeUrl, referer = data)
 
-            loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+    // new4.php içindeki video linklerini parse et
+    Regex("""file:"([^"]+)", label: "([^"]+)""").findAll(alternatifResp.text).forEach {
+        var thisName = this.name
+        val videoUrl = it.groupValues[1]
+        var quality = it.groupValues[2]
+
+        if (quality == "FULL") {
+            quality = "1080p"
+            thisName = "Google"
         }
+        // Callback ile video bilgilerini geri gönder
+        callback.invoke(
+            newExtractorLink(
+                source = thisName,
+                name = thisName,
+                url = videoUrl,
+                type = ExtractorLinkType.VIDEO
+            ) {
+                headers = mapOf("Referer" to data)
+                quality = getQualityFromName(quality).toString()
+            }
+        )
     }
 
     return true
- }
+}
 }

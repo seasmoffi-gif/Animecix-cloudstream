@@ -72,9 +72,10 @@ data class VerifyUrl(
 suspend fun bypassVerification(mainUrl: String): String {
     val homePageDocument = httpClient.get("${mainUrl}/home").document
     val addHash          = homePageDocument.select("body").attr("data-addhash")
+	Log.d("NFX", "Extracted data-addhash: $addHash")
 
-    var verificationUrl  = "https://raw.githubusercontent.com/SaurabhKaperwan/Utils/main/NF.json"
-    // https://userverify.netmirror.app/verify?dp1=###&a=y
+    var verificationUrl  = "https://raw.githubusercontent.com/SaurabhKaperwan/Utils/refs/heads/main/NF.json"
+    // 
 
     verificationUrl      = httpClient.get(verificationUrl).parsed<VerifyUrl>().url.replace("###", addHash)
     val hashDigits       = addHash.filter { it.isDigit() }

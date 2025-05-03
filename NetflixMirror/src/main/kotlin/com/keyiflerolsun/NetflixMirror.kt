@@ -5,6 +5,7 @@ package com.keyiflerolsun
 import android.util.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 import com.keyiflerolsun.entities.EpisodesData
 import com.keyiflerolsun.entities.PlayList
 import com.keyiflerolsun.entities.PostData
@@ -17,7 +18,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 class NetflixMirror : MainAPI() {
-    override var mainUrl              = "https://iosmirror.cc"
+    override var mainUrl              = "https://netfree2.cc/mobile"
     override var name                 = "NetflixMirror"
     override val hasMainPage          = true
     override var lang                 = "hi"
@@ -207,14 +208,15 @@ class NetflixMirror : MainAPI() {
         playlist.forEach { item ->
             item.sources.forEach {
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         name,
                         it.label,
                         fixUrl(it.file),
-                        "${mainUrl}/",
-                        getQualityFromName(it.file.substringAfter("q=", "")),
-                        true
-                    )
+                        type = ExtractorLinkType.M3U8
+                     ) {
+                         this.referer = "$mainUrl/"
+                         this.quality = getQualityFromName(it.file.substringAfter("q=", ""))
+                     }
                 )
             }
 
@@ -235,8 +237,10 @@ class NetflixMirror : MainAPI() {
         return object : Interceptor {
             override fun intercept(chain: Interceptor.Chain): Response {
                 val request = chain.request()
+                var urlString = request.url.toString()
                 if (request.url.toString().contains(".m3u8")) {
-                    val newRequest = request.newBuilder().header("Cookie", "hd=on").build()
+                    urlString = urlString.replace("mobile/mobile/", "mobile/")
+                    val newRequest = request.newBuilder().url(urlString).header("Cookie", "hd=on").build()
 
                     return chain.proceed(newRequest)
                 }

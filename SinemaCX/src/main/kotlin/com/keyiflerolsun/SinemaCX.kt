@@ -18,9 +18,11 @@ class SinemaCX : MainAPI() {
     override val supportedTypes       = setOf(TvType.Movie)
 
     // ! CloudFlare bypass
+	/*
     override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
     override var sequentialMainPageDelay       = 250L // ? 0.25 saniye
     override var sequentialMainPageScrollDelay = 250L // ? 0.25 saniye
+	*/
 
     override val mainPage = mainPageOf(
         "${mainUrl}/izle/aile-filmleri/page/"			 to		"Aile Filmleri",
@@ -48,7 +50,7 @@ class SinemaCX : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse? {
         val title     = this.selectFirst("div.yanac span")?.text() ?: return null
         val href      = fixUrlNull(this.selectFirst("div.yanac a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("a.resim img")?.attr("src")) ?: fixUrlNull(this.selectFirst("a.resim img")?.attr("data-src"))
+        val posterUrl = fixUrlNull(this.selectFirst("a.resim img")?.attr("data-src")) ?: fixUrlNull(this.selectFirst("a.resim img")?.attr("src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
@@ -86,58 +88,89 @@ class SinemaCX : MainAPI() {
         }
     }
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
-        Log.d("SCX", "data » $data")
-        val document = app.get(data).document
-        val iframe   = fixUrlNull(document.selectFirst("iframe")?.attr("data-vsrc"))?.substringBefore("?img=") ?: return false
-        Log.d("SCX", "iframe » $iframe")
+override suspend fun loadLinks(
+    data: String,
+    isCasting: Boolean,
+    subtitleCallback: (SubtitleFile) -> Unit,
+    callback: (ExtractorLink) -> Unit
+): Boolean {
+    Log.d("SCX", "data » $data")
 
-        val iframeSource         = app.get(iframe, referer="${mainUrl}/").text
-        val subtitleSectionRegex = Regex("""playerjsSubtitle\s*=\s*"(.+?)"""")
-        val subtitleSectionMatch = subtitleSectionRegex.find(iframeSource)
-        if (subtitleSectionMatch != null) {
-            val subtitleSection = subtitleSectionMatch.groupValues[1]
-            val subtitleRegex   = Regex("""\[(.*?)](https?://[^\s",]+)""")
-            val subtitleMatches = subtitleRegex.findAll(subtitleSection)
+    // Sayfa ve ilk iframe'i al
+    val document = app.get(data).document
+    val iframeRaw = document.select("iframe").map { it.attr("data-vsrc") }
 
-            for (subtitleMatch in subtitleMatches) {
-                val subtitleGroups   = subtitleMatch.groupValues
-                val subtitleLanguage = subtitleGroups[1]
-                val subtitleUrl      = subtitleGroups[2]
+    val hasOnlyTrailer = iframeRaw.all {
+        it.contains("youtube", ignoreCase = true) ||
+        it.contains("fragman", ignoreCase = true) ||
+        it.contains("trailer", ignoreCase = true)
+    }
 
-                subtitleCallback.invoke(
-                    SubtitleFile(
-                        lang = subtitleLanguage,
-                        url  = fixUrl(subtitleUrl)
-                    )
-                )
+    // Eğer sayfa sadece fragmansa, /2/ sayfasından iframe'leri al
+    val iframeList = if (hasOnlyTrailer) {
+        val altUrl = if (data.endsWith("/")) data + "2/" else "$data/2/"
+        val altDoc = app.get(altUrl).document
+        altDoc.select("iframe").map { it.attr("data-vsrc") }
+    } else {
+        iframeRaw
+    }
 
-            }
-        }
+    // Eğer iframe bulunamadıysa işlemi sonlandır
+    val iframe = fixUrlNull(iframeList.firstOrNull())?.substringBefore("?img=") ?: return false
+    Log.d("SCX", "iframe » $iframe")
 
-        if (iframe.contains("panel.sinema.cx")){
-            val vidUrl = app.post(
-                "https://panel.sinema.cx/player/index.php?data=" + iframe.split("/").last() + "&do=getVideo",
-                headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
-                referer = "${mainUrl}/"
-            ).parsedSafe<Panel>()?.securedLink ?: return false
+    // Altyazı kontrolü
+    val iframeSource = app.get(iframe, referer = "${mainUrl}/").text
+    val subtitleSectionRegex = Regex("""playerjsSubtitle\s*=\s*"(.+?)"""")
+    val subtitleSectionMatch = subtitleSectionRegex.find(iframeSource)
+    if (subtitleSectionMatch != null) {
+        val subtitleSection = subtitleSectionMatch.groupValues[1]
+        val subtitleRegex = Regex("""\[(.*?)](https?://[^\s",]+)""")
+        val subtitleMatches = subtitleRegex.findAll(subtitleSection)
 
-            callback.invoke(
-                ExtractorLink(
-                    source  = this.name,
-                    name    = this.name,
-                    url     = vidUrl,
-                    referer = iframe,
-                    quality = Qualities.Unknown.value,
-                    isM3u8  = true
+        for (subtitleMatch in subtitleMatches) {
+            val subtitleGroups = subtitleMatch.groupValues
+            val subtitleLanguage = subtitleGroups[1]
+            val subtitleUrl = subtitleGroups[2]
+
+            subtitleCallback.invoke(
+                SubtitleFile(
+                    lang = subtitleLanguage,
+                    url = fixUrl(subtitleUrl)
                 )
             )
-        } else {
-            loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
         }
-
-        return true
     }
+
+    // iframe kaynak kontrolü ve link çekme
+    if (iframe.lowercase().contains("player.filmizle.in")) {
+        val baseUrl = Regex("""https?://([^/]+)""").find(iframe)?.groupValues?.get(1)
+            ?: return false
+
+        val vidUrl = app.post(
+            "https://$baseUrl/player/index.php?data=" + iframe.split("/").last() + "&do=getVideo",
+            headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
+            referer = "${mainUrl}/"
+        ).parsedSafe<Panel>()?.securedLink ?: return false
+
+        callback.invoke(
+            newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = vidUrl,
+                type = ExtractorLinkType.M3U8
+            ) {
+                quality = Qualities.Unknown.value
+                headers = mapOf("Referer" to iframe)
+            }
+        )
+    } else {
+        loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+    }
+
+    return true
+}
+
 
     data class Panel(
         @JsonProperty("hls")         val hls: Boolean?        = null,

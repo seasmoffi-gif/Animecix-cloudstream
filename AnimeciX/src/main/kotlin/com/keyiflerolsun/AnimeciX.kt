@@ -21,8 +21,8 @@ class AnimeciX : MainAPI() {
     override var sequentialMainPageScrollDelay = 200L  // ? 0.20 saniye
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/secure/titles?type=series&onlyStreamable=true" to "seriler",
-        "${mainUrl}/secure/titles?type=movie&onlyStreamable=true"  to "filmler",
+        "${mainUrl}/secure/titles?type=series&onlyStreamable=true" to "Seriler",
+        "${mainUrl}/secure/titles?type=movie&onlyStreamable=true"  to "Filmler",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -109,14 +109,43 @@ class AnimeciX : MainAPI() {
             addTrailer(response.title.trailer)
         }
     }
+override suspend fun loadLinks(
+    data: String,
+    isCasting: Boolean,
+    subtitleCallback: (SubtitleFile) -> Unit,
+    callback: (ExtractorLink) -> Unit
+): Boolean {
+    Log.d("ACX", "data » $data")
+    val pageUrl = "$mainUrl/$data"
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
-        Log.d("ACX", "data » $data")
-        val iframeLink = app.get("${mainUrl}/${data}", referer="${mainUrl}/").url
-        Log.d("ACX", "iframeLink » $iframeLink")
+    // Sayfayı çek
+    val response = app.get(pageUrl, referer = "$mainUrl/")
+    var iframeLink = response.url
+    Log.d("ACX", "iframeLink » $iframeLink")
 
-        loadExtractor(iframeLink, "${mainUrl}/", subtitleCallback, callback)
-
-        return true
+    // Eğer iframeLink içinde çift URL varsa düzelt
+    val doubleUrlRegex = Regex("https://anm.cx/(https://anm.cx/secure/[^\\s]+)")
+    val match = doubleUrlRegex.find(iframeLink)
+    if (match != null) {
+        iframeLink = match.groupValues[1]
+        Log.d("ACX", "Corrected iframeLink » $iframeLink")
     }
+
+    // Eğer dizi (best-video) ise yönlendirmeyi takip et
+    if (iframeLink.contains("/secure/best-video")) {
+        val redirectResponse = app.get(iframeLink, referer = "$mainUrl/")
+        val redirectedUrl = redirectResponse.url
+        Log.d("ACX", "Redirected final URL » $redirectedUrl")
+
+        if (redirectedUrl.contains("tau-video")) {
+            loadExtractor(redirectedUrl, "$mainUrl/", subtitleCallback, callback)
+        } else {
+            Log.d("ACX", "Redirect failed or unexpected URL: $redirectedUrl")
+        }
+    } else {
+        loadExtractor(iframeLink, "$mainUrl/", subtitleCallback, callback)
+    }
+
+    return true
+}
 }
