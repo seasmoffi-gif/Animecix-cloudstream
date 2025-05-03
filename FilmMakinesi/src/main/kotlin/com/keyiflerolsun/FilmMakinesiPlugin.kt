@@ -9,6 +9,5 @@ class FilmMakinesiPlugin: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(FilmMakinesi())
         registerExtractorAPI(CloseLoad())
-        registerExtractorAPI(RapidExtractor())
     }
 }

@@ -1,7 +1,7 @@
-version = 6
+version = 17
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "nikyokki")
+    authors     = listOf("keyiflerolsun")
     language    = "tr"
     description = "Sinema zevkini evinize kadar getirdik. Türkiye'nin lider Film sitesinde, en yeni filmleri Full HD izleyin."
 

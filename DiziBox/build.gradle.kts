@@ -1,7 +1,7 @@
-version = 6
+version = 19
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "nikyokki")
+    authors     = listOf("keyiflerolsun")
     language    = "tr"
     description = "Yabancı Dizi izle, Tüm yabancı dizilerin yeni ve eski sezonlarını full hd izleyebileceğiniz elit site."
 

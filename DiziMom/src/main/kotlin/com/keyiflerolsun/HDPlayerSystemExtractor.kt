@@ -40,13 +40,15 @@ open class HDPlayerSystem : ExtractorApi() {
 
         callback.invoke(
             newExtractorLink(
-                source  = this.name,
-                name    = this.name,
-                url     = m3uLink,
-                type    = INFER_TYPE
+                source = this.name,
+                name = this.name,
+                url = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
+                type = ExtractorLinkType.M3U8 // Tür olarak M3U8'yi belirtiyoruz
             ) {
-                this.referer = extRef
-                this.quality = Qualities.Unknown.value
+                quality = Qualities.Unknown.value // Varsayılan kalite ayarlandı
+                /* referer = url // bunun yerine headers kodunu ekledim */
+                headers = mapOf("Referer" to url) // Referer burada başlıklar üzerinden ayarlandı
+                /* site açılmıyor şu anda o yüzden hata vermemesi için bunu kapatıyorum isM3u8 = true */
             }
         )
     }

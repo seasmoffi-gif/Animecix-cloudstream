@@ -1,6 +1,5 @@
 package com.keyiflerolsun
 
-import android.util.Base64
 import android.util.Log
 import com.lagradost.cloudstream3.DubStatus
 import com.lagradost.cloudstream3.Episode
@@ -28,53 +27,54 @@ import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 import java.net.URI
 import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import javax.crypto.spec.IvParameterSpec
+import android.util.Base64
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONException
+import org.json.JSONObject
 
 class InatBox : MainAPI() {
-    private val contentUrl = "https://dizibox.rest"
+    private val contentUrl  = "https://dizibox.rest"
 
-    override var name = "InatBox"
-    override val hasMainPage = true
-    override var lang = "tr"
-    override val hasQuickSearch = true
-    override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Live)
-    override var sequentialMainPage = false
+    override var name                 = "InatBox"
+    override val hasMainPage          = true
+    override var lang                 = "tr"
+    override val hasQuickSearch       = true
+    override val supportedTypes       = setOf(TvType.Movie, TvType.TvSeries, TvType.Live)
+    override var sequentialMainPage   = false
 
     private val urlToSearchResponse = mutableMapOf<String, SearchResponse>()
-    private val aesKey = "ywevqtjrurkwtqgz"
+    private val aesKey = "ywevqtjrurkwtqgz" //Master secret and iv key
 
     override val mainPage = mainPageOf(
         "https://boxbc.sbs/CDN/001_STR/boxbc.sbs/spor_v2.php" to "Spor Kanalları",
-        "${contentUrl}/tv/cable.php" to "Kanallar Liste 1",
-        "${contentUrl}/tv/list2.php" to "Kanallar Liste 2",
-        "${contentUrl}/tv/sinema.php" to "Sinema Kanalları",
-        "${contentUrl}/tv/belgesel.php" to "Belgesel Kanalları",
-        "${contentUrl}/tv/ulusal.php" to "Ulusal Kanallar",
-        "${contentUrl}/tv/haber.php" to "Haber Kanalları",
-        "${contentUrl}/tv/cocuk.php" to "Çocuk Kanalları",
-        "${contentUrl}/tv/dini.php" to "Dini Kanallar",
-        "${contentUrl}/ex/index.php" to "EXXEN",
-        "${contentUrl}/ga/index.php" to "Gain",
-        "${contentUrl}/blu/index.php" to "BluTV",
-        "${contentUrl}/nf/index.php" to "Netflix",
-        "${contentUrl}/dsny/index.php" to "Disney+",
-        "${contentUrl}/amz/index.php" to "Amazon Prime",
-        "${contentUrl}/hb/index.php" to "HBO Max",
-        "${contentUrl}/tbi/index.php" to "Tabii",
-        "${contentUrl}/film/mubi.php" to "Mubi",
-        "${contentUrl}/ccc/index.php" to "TOD",
-        "${contentUrl}/yabanci-dizi/index.php" to "Yabancı Diziler",
-        "${contentUrl}/yerli-dizi/index.php" to "Yerli Diziler",
-        "${contentUrl}/film/yerli-filmler.php" to "Yerli Filmler",
-        "${contentUrl}/film/4k-film-exo.php" to "4K Film İzle | Exo"
+        "${contentUrl}/tv/cable.php"                          to "Kanallar Liste 1",
+        "${contentUrl}/tv/list2.php"                          to "Kanallar Liste 2",
+        "${contentUrl}/tv/sinema.php"                         to "Sinema Kanalları",
+        "${contentUrl}/tv/belgesel.php"                       to "Belgesel Kanalları",
+        "${contentUrl}/tv/ulusal.php"                         to "Ulusal Kanallar",
+        "${contentUrl}/tv/haber.php"                          to "Haber Kanalları",
+        "${contentUrl}/tv/cocuk.php"                          to "Çocuk Kanalları",
+        "${contentUrl}/tv/dini.php"                           to "Dini Kanallar",
+        "${contentUrl}/ex/index.php"                          to "EXXEN",
+        "${contentUrl}/ga/index.php"                          to "Gain",
+        "${contentUrl}/max/index.php"                         to "Max-BluTV",
+        "${contentUrl}/nf/index.php"                          to "Netflix",
+        "${contentUrl}/dsny/index.php"                        to "Disney+",
+        "${contentUrl}/amz/index.php"                         to "Amazon Prime",
+        "${contentUrl}/hb/index.php"                          to "HBO Max",
+        "${contentUrl}/tbi/index.php"                         to "Tabii",
+        "${contentUrl}/film/mubi.php"                         to "Mubi",
+        "${contentUrl}/ccc/index.php"                         to "TOD",
+        "${contentUrl}/yabanci-dizi/index.php"                to "Yabancı Diziler",
+        "${contentUrl}/yerli-dizi/index.php"                  to "Yerli Diziler",
+        "${contentUrl}/film/yerli-filmler.php"                to "Yerli Filmler",
+        "${contentUrl}/film/4k-film-exo.php"                  to "4K Film İzle | Exo"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -90,7 +90,7 @@ class InatBox : MainAPI() {
             }
         }
 
-
+        // Return a HomePageResponse with the parsed results
         return newHomePageResponse(request.name, searchResults)
     }
 
@@ -164,12 +164,7 @@ class InatBox : MainAPI() {
         }
     }
 
-    override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
+    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         Log.d("InatBox", "data: $data")
         return try {
             if (data.startsWith("[")) {
@@ -191,10 +186,7 @@ class InatBox : MainAPI() {
         }
     }
 
-    private suspend fun parseTvSeriesResponse(
-        item: JSONObject,
-        tvType: TvType = TvType.TvSeries
-    ): LoadResponse? {
+    private suspend fun parseTvSeriesResponse(item: JSONObject, tvType: TvType = TvType.TvSeries): LoadResponse? {
         val episodes = mutableMapOf<DubStatus, MutableList<Episode>>()
         val seasonDataList = mutableListOf<SeasonData>()
 
@@ -214,7 +206,7 @@ class InatBox : MainAPI() {
 
                 val seasonUrl = seasonItem.getString("diziUrl")
 
-
+                // Fetch the episode data for this season
                 val episodeResponse = makeInatRequest(seasonUrl) ?: continue
                 val episodeArray = try {
                     JSONArray(episodeResponse)
@@ -242,7 +234,7 @@ class InatBox : MainAPI() {
                 }
             }
 
-
+            // Get the poster URL from the first season
             val firstSeason = jsonArray.getJSONObject(0)
             val posterUrl = firstSeason.getString("diziImg")
 
@@ -279,12 +271,7 @@ class InatBox : MainAPI() {
                 val jsonResponse = makeInatRequest(url) ?: return null
                 val jsonArray = JSONArray(jsonResponse)
 
-                return newMovieLoadResponse(
-                    name = name,
-                    url = item.toString(),
-                    type = TvType.Movie,
-                    dataUrl = jsonArray.toString()
-                ) {
+                return newMovieLoadResponse(name = name,url = item.toString(), type = TvType.Movie, dataUrl = jsonArray.toString()){
                     this.posterUrl = posterUrl
                     this.plot = plot
                 }
@@ -362,15 +349,11 @@ class InatBox : MainAPI() {
         )
     }
 
-    private suspend fun loadChContentLinks(
-        chContent: ChContent,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ) {
+    private suspend fun loadChContentLinks(chContent: ChContent, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit){
         val chType = chContent.chType
-        val contentToProcess: ChContent
+        val contentToProcess : ChContent
 
-        if (chType == "tekli_regex_lb_sh_3") {
+        if(chType == "tekli_regex_lb_sh_3"){
             val name = chContent.chName
             val url = chContent.chUrl
             val posterUrl = chContent.chImg
@@ -379,15 +362,15 @@ class InatBox : MainAPI() {
             val type = chContent.chType
 
             val jsonResponse = runCatching { makeInatRequest(url) }.getOrNull()
-                ?: getJsonFromEncryptedInatResponse(app.get(url).body?.string() ?: "") ?: return
+    ?: getJsonFromEncryptedInatResponse(app.get(url).body?.string() ?: "") ?: return
             val firstItem = JSONObject(jsonResponse)
             firstItem.put("chHeaders", headers)
             firstItem.put("chReg", reg)
-            firstItem.put("chName", name)
-            firstItem.put("chImg", posterUrl)
-            firstItem.put("chType", type)
+            firstItem.put("chName",name)
+            firstItem.put("chImg",posterUrl)
+            firstItem.put("chType",type)
             contentToProcess = parseToChContent(firstItem)
-        } else {
+        } else{
             contentToProcess = chContent
         }
 
@@ -414,23 +397,24 @@ class InatBox : MainAPI() {
 
         val extractorFound =
             if (sourceUrl.contains("dzen.ru")) {
-                loadExtractor(sourceUrl,subtitleCallback,callback)
-            } else {
-                loadExtractor(sourceUrl, headers["Referer"], subtitleCallback) {
-                    callback.invoke(
-                        ExtractorLink(
-                            source = it.source,
-                            name = contentToProcess.chName,
-                            url = it.url,
-                            referer = it.referer,
-                            quality = it.quality,
-                            headers = it.headers,
-                            type = it.type
-                        )
-                    )
-                }
+                 loadExtractor(sourceUrl,subtitleCallback,callback)
+             } else {
+                 loadExtractor(sourceUrl, headers["Referer"], subtitleCallback) {
+                     callback.invoke(
+                         ExtractorLink(
+                             source = it.source,
+                             name = contentToProcess.chName,
+                             url = it.url,
+                             referer = it.referer,
+                             quality = it.quality,
+                             headers = it.headers,
+                             type = it.type
+                         )
+                     )
+                 }
             }
 
+        //When no extractor found, try to load as generic
         if (!extractorFound) {
             callback.invoke(
                 ExtractorLink(
@@ -440,10 +424,7 @@ class InatBox : MainAPI() {
                     referer = "",
                     quality = Qualities.Unknown.value,
                     headers = headers,
-                    type = if (sourceUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else if (sourceUrl.contains(
-                            ".mpd"
-                        )
-                    ) ExtractorLinkType.DASH else ExtractorLinkType.VIDEO
+                    type = if(sourceUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else if(sourceUrl.contains(".mpd")) ExtractorLinkType.DASH else ExtractorLinkType.VIDEO
                 )
             )
         }
@@ -484,7 +465,7 @@ class InatBox : MainAPI() {
 
         if (response.isSuccessful) {
             val encryptedResponse = response.body?.string() ?: ""
-
+            // Log.d("InatBox", "Encrypted response: ${encryptedResponse}")
             return getJsonFromEncryptedInatResponse(encryptedResponse)
         } else {
             Log.e("InatBox", "Request failed")
@@ -497,13 +478,13 @@ class InatBox : MainAPI() {
             val algorithm = "AES/CBC/PKCS5Padding"
             val keySpec = SecretKeySpec(aesKey.toByteArray(), "AES")
 
-
+            // First decryption iteration
             val cipher1 = Cipher.getInstance(algorithm)
             cipher1.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(aesKey.toByteArray()))
             val firstIterationData =
                 cipher1.doFinal(Base64.decode(response.split(":")[0], Base64.DEFAULT))
 
-
+            // Second decryption iteration
             val cipher2 = Cipher.getInstance(algorithm)
             cipher2.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(aesKey.toByteArray()))
             val secondIterationData = cipher2.doFinal(
@@ -513,7 +494,7 @@ class InatBox : MainAPI() {
                 )
             )
 
-
+            // Parse JSON
             val jsonString = String(secondIterationData)
             return jsonString
         } catch (e: Exception) {
@@ -549,21 +530,17 @@ class InatBox : MainAPI() {
                             this.posterUrl = posterUrl
                         }
 
-                        else -> null
+                        else -> null // Ignore unsupported types
                     }
                     searchResponse?.let { searchResults.add(it) }
                 } else if (item.has("chName") && item.has("chUrl") && item.has("chImg")) {
-
+                    // Handle the case where diziType is missing but chName, chUrl, and chImg are present
                     val name = item.getString("chName")
                     val posterUrl = item.getString("chImg")
                     val chType = item.getString("chType")
 
                     val searchResponse = when (chType) {
-                        "live_url", "tekli_regex_lb_sh_3" -> newLiveSearchResponse(
-                            name,
-                            item.toString(),
-                            TvType.Live
-                        ) {
+                        "live_url", "tekli_regex_lb_sh_3" -> newLiveSearchResponse(name, item.toString(), TvType.Live) {
                             this.posterUrl = posterUrl
                         }
 

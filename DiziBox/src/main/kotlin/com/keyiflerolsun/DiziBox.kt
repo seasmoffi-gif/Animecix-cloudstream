@@ -24,7 +24,7 @@ class DiziBox : MainAPI() {
     override val supportedTypes       = setOf(TvType.TvSeries)
 
     // ! CloudFlare bypass
-    override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
+    override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/library/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
     override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
 
@@ -36,9 +36,9 @@ class DiziBox : MainAPI() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val request  = chain.request()
             val response = chain.proceed(request)
-            val doc      = Jsoup.parse(response.peekBody(1024 * 1024).string())
+            val doc      = Jsoup.parse(response.peekBody(10 * 1024).string())
 
-            if (doc.text().contains("Güvenlik taramasından geçiriliyorsunuz. Lütfen bekleyiniz..")) {
+            if (response.code == 503 || doc.selectFirst("meta[name='cloudflare']") != null) {
                 return cloudflareKiller.intercept(chain)
             }
 
@@ -47,34 +47,32 @@ class DiziBox : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/tum-bolumler/page/SAYFA/?tip=populer"               to "Popüler Dizilerden Son Bölümler",
-        "${mainUrl}/tum-bolumler/page/SAYFA/"                           to "Yeni Eklenen Bölümler",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/"                            to "Dizi Arşivi",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?ulke[]=turkiye&yil=&imdb"   to "Yerli",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=aile&yil&imdb"       to "Aile",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=aksiyon&yil&imdb"    to "Aksiyon",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=animasyon&yil&imdb"  to "Animasyon",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=belgesel&yil&imdb"   to "Belgesel",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=bilimkurgu&yil&imdb" to "Bilimkurgu",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=biyografi&yil&imdb"  to "Biyografi",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=dram&yil&imdb"       to "Dram",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=drama&yil&imdb"      to "Drama",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=fantastik&yil&imdb"  to "Fantastik",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=gerilim&yil&imdb"    to "Gerilim",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=gizem&yil&imdb"      to "Gizem",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=komedi&yil&imdb"     to "Komedi",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=korku&yil&imdb"      to "Korku",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=macera&yil&imdb"     to "Macera",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=muzik&yil&imdb"      to "Müzik",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=muzikal&yil&imdb"    to "Müzikal",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=reality-tv&yil&imdb" to "Reality TV",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=romantik&yil&imdb"   to "Romantik",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=savas&yil&imdb"      to "Savaş",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=spor&yil&imdb"       to "Spor",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=suc&yil&imdb"        to "Suç",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=tarih&yil&imdb"      to "Tarih",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=western&yil&imdb"    to "Western",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=yarisma&yil&imdb"    to "Yarışma"
+        "${mainUrl}/ulke/turkiye"              to "Yerli",
+        "${mainUrl}/dizi-arsivi/page/SAYFA/"   to "Dizi Arşivi",
+        "${mainUrl}/tur/aile/page/SAYFA/"      to "Aile",
+        "${mainUrl}/tur/aksiyon/page/SAYFA"    to "Aksiyon",
+        "${mainUrl}/tur/animasyon/page/SAYFA"  to "Animasyon",
+        "${mainUrl}/tur/belgesel/page/SAYFA"   to "Belgesel",
+        "${mainUrl}/tur/bilimkurgu/page/SAYFA" to "Bilimkurgu",
+        "${mainUrl}/tur/biyografi/page/SAYFA"  to "Biyografi",
+        "${mainUrl}/tur/dram/page/SAYFA"       to "Dram",
+        "${mainUrl}/tur/drama/page/SAYFA"      to "Drama",
+        "${mainUrl}/tur/fantastik/page/SAYFA"  to "Fantastik",
+        "${mainUrl}/tur/gerilim/page/SAYFA"    to "Gerilim",
+        "${mainUrl}/tur/gizem/page/SAYFA"      to "Gizem",
+        "${mainUrl}/tur/komedi/page/SAYFA"     to "Komedi",
+        "${mainUrl}/tur/korku/page/SAYFA"      to "Korku",
+        "${mainUrl}/tur/macera/page/SAYFA"     to "Macera",
+        "${mainUrl}/tur/muzik/page/SAYFA"      to "Müzik",
+        "${mainUrl}/tur/muzikal/page/SAYFA"    to "Müzikal",
+        "${mainUrl}/tur/reality-tv/page/SAYFA" to "Reality TV",
+        "${mainUrl}/tur/romantik/page/SAYFA"   to "Romantik",
+        "${mainUrl}/tur/savas/page/SAYFA"      to "Savaş",
+        "${mainUrl}/tur/spor/page/SAYFA"       to "Spor",
+        "${mainUrl}/tur/suc/page/SAYFA"        to "Suç",
+        "${mainUrl}/tur/tarih/page/SAYFA"      to "Tarih",
+        "${mainUrl}/tur/western/page/SAYFA"    to "Western",
+        "${mainUrl}/tur/yarisma/page/SAYFA"    to "Yarışma"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -82,46 +80,29 @@ class DiziBox : MainAPI() {
         val document = app.get(
             url,
             cookies     = mapOf(
+                "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744009162326"
+                "dbxu"          to "1743289650198"
             ),
-            interceptor = interceptor
+            interceptor = interceptor, cacheTime = 60
         ).document
-        if (request.name == "Yeni Eklenen Bölümler" || request.name == "Popüler Dizilerden Son Bölümler") {
-            val home = document.select("article.article-episode-card").mapNotNull { it.sonBolumler() }
-            return newHomePageResponse(request.name, home)
-        }
-        val home = document.select("article.detailed-article").mapNotNull { it.toMainPageResult() }
-
+        val home = document.select("article.article-series-poster").mapNotNull {
+        it.toMainPageResult()
+    }
         return newHomePageResponse(request.name, home)
     }
 
-    private fun Element.toMainPageResult(): SearchResponse? {
-        val title     = this.selectFirst("h3 a")?.text() ?: return null
-        val href      = fixUrlNull(this.selectFirst("h3 a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
-
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
-    }
-
-    private suspend fun Element.sonBolumler(): SearchResponse? {
-        val name = this.selectFirst("b.series-name")?.text() ?: ""
-        val szn = this.selectFirst("span.season")?.text()?.replace(".SEZON", "") ?: ""
-        val ep = this.selectFirst("b.episode")?.text()?.replace(".BÖLÜM", "") ?: ""
-        val epName = "${szn}x$ep"
-
-        val title = "$name - $epName"
-
-        val epDoc = fixUrlNull(this.selectFirst("a")?.attr("href"))?.let { app.get(it).document }
-
-        val href = fixUrlNull(epDoc?.selectFirst("a.archive-title")?.attr("href")) ?: return null
-
-        val posterUrl = fixUrlNull(epDoc?.selectFirst("img.small-thumbnail")?.attr("src"))?.replace("50x50","200x290")
-
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-            this.posterUrl = posterUrl
+private fun Element.toMainPageResult(): SearchResponse? {
+    val title = this.selectFirst("a")?.text() ?: return null
+    val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+    val posterUrl = fixUrlNull(
+        this.selectFirst("img")?.let { img ->
+            img.attr("data-src").takeIf { it.isNotBlank() } ?: img.attr("src")
         }
-    }
+    )
+
+    return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+}
 
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get(
@@ -129,7 +110,7 @@ class DiziBox : MainAPI() {
             cookies     = mapOf(
                 "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744009162326"
+                "dbxu"          to "1743289650198"
             ),
             interceptor = interceptor
         ).document
@@ -139,15 +120,13 @@ class DiziBox : MainAPI() {
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
-
-
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(
             url,
             cookies     = mapOf(
                 "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744009162326"
+                "dbxu"          to "1743289650198"
             ),
             interceptor = interceptor
         ).document
@@ -169,7 +148,7 @@ class DiziBox : MainAPI() {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744009162326"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -210,7 +189,7 @@ class DiziBox : MainAPI() {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744009162326"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -225,13 +204,13 @@ class DiziBox : MainAPI() {
 
             callback.invoke(
                 newExtractorLink(
-                    source  = this.name,
-                    name    = this.name,
-                    url     = vidUrl,
-                    ExtractorLinkType.M3U8
+                    source = this.name,
+                    name = this.name,
+                    url = vidUrl,
+                    type = ExtractorLinkType.M3U8 // Tür olarak M3U8 ayarlandı
                 ) {
-                    this.referer = vidUrl
-                    this.quality = getQualityFromName("4K")
+                    headers = mapOf("Referer" to vidUrl) // Referer başlığı ayarlandı
+                    quality = getQualityFromName("4k") // Kalite ayarlandı
                 }
             )
 
@@ -243,7 +222,7 @@ class DiziBox : MainAPI() {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744009162326"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -267,7 +246,7 @@ class DiziBox : MainAPI() {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744009162326"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -294,7 +273,7 @@ class DiziBox : MainAPI() {
             cookies     = mapOf(
                 "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744009162326"
+                "dbxu"          to "1743289650198"
             ),
             interceptor = interceptor
         ).document
@@ -310,7 +289,7 @@ class DiziBox : MainAPI() {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744009162326"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document

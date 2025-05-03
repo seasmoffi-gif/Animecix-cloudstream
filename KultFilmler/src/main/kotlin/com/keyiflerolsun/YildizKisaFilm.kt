@@ -45,8 +45,8 @@ open class YildizKisaFilm : ExtractorApi() {
                 url     = m3uLink,
                 type    = INFER_TYPE
             ) {
-                this.referer = extRef
-                this.quality = Qualities.Unknown.value
+                quality = Qualities.Unknown.value
+                headers = mapOf("Referer" to extRef)
             }
         )
     }

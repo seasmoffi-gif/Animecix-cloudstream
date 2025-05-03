@@ -1,7 +1,7 @@
-version = 4
+version = 3
 
 cloudstream {
-    authors     = listOf("keyiflerolsun","JustRelaxable", "nikyokki")
+    authors     = listOf("keyiflerolsun","JustRelaxable")
     language    = "tr"
     description = "Güncel ve eski dizileri en iyi görüntü kalitesiyle bulabileceğiniz yabancı dizi izleme siteniz."
 

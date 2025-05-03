@@ -128,9 +128,9 @@ class FilmModu : MainAPI() {
                         url     = fixUrl(source.src),
                         type    = INFER_TYPE
                     ) {
-                        this.referer = "${mainUrl}/"
-                        this.quality = getQualityFromName(source.label)
-                    }
+                       headers = mapOf("Referer" to "${mainUrl}/")
+                       quality = getQualityFromName(source.label)
+            }
                 )
             }
         }

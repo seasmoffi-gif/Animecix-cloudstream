@@ -51,13 +51,13 @@ open class PeaceMakerst : ExtractorApi() {
 
         callback.invoke(
             newExtractorLink(
-                source  = this.name,
-                name    = this.name,
-                url     = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
+                source = this.name,
+                name = this.name,
+                url = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
                 type    = INFER_TYPE
             ) {
-                this.referer = extRef
-                this.quality = Qualities.Unknown.value
+                quality = Qualities.Unknown.value
+                headers = mapOf("Referer" to extRef)
             }
         )
     }
