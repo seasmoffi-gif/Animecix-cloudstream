@@ -25,18 +25,47 @@ class DDizi : MainAPI() {
     override val mainPage = mainPageOf(
         "$mainUrl/yeni-eklenenler1"  to "Son Eklenen Bölümler",
         "$mainUrl/yabanci-dizi-izle" to "Yabancı Diziler",
-        "$mainUrl/arama/"            to "Yerli Diziler",
+        "$mainUrl"                   to "Yerli Diziler",
         "$mainUrl/eski.diziler"      to "Eski Diziler"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page > 1) "${request.data}/$page" else request.data
         val document = app.get(url, headers = getHeaders(mainUrl)).document
-
-        // Tek bir seçiciyle hem dizi-boxpost hem dizi-boxpost-cat alınır
-        val home = document.select("div.dizi-boxpost, div.dizi-boxpost-cat")
-            .mapNotNull { it.toSearchResult() }
-
+    
+        val home = when (request.name) {
+            "Yerli Diziler" -> {
+                val listItems = document.selectFirst("ul.list_")  // Sadece ilkini al
+                    ?.select("li > a")
+                    ?.mapNotNull {
+                        val title = it.text()?.trim() ?: return@mapNotNull null
+                        val rawHref = it.attr("href") ?: return@mapNotNull null
+        
+                        // İstenmeyen bağlantıları atla
+                        if (rawHref.contains("eski.diziler") || rawHref.contains("yabanci-dizi-izle")) {
+                            return@mapNotNull null
+                        }
+        
+                        val cleanedHref = fixUrl(rawHref.replace(Regex("-\\d*-?son-bolum-izle/?$"), ""))
+        
+                        val posterDoc = app.get(cleanedHref, headers = getHeaders(mainUrl)).document
+                        val posterUrl = posterDoc.selectFirst("div.afis img, img.afis, img.img-back, img.img-back-cat")
+                            ?.let { img -> fixUrlNull(img.attr("data-src") ?: img.attr("src")) }
+        
+                        newTvSeriesSearchResponse(title, cleanedHref, TvType.TvSeries) {
+                            this.posterUrl = posterUrl
+                        }
+                    }?.take(34)
+        
+                listItems ?: emptyList()
+            }
+        
+            else -> {
+                document.select("div.dizi-boxpost, div.dizi-boxpost-cat")
+                    .mapNotNull { it.toSearchResult() }
+            }
+        }
+    
         val hasNextPage = document.selectFirst(".pagination a:contains(Sonraki)") != null
         return newHomePageResponse(request.name, home, hasNextPage)
     }
@@ -116,13 +145,16 @@ class DDizi : MainAPI() {
 
         // Başlık ayrıştırma için daha basit bir yöntem
         val (title, season, episode) = parseTitle(fullTitle)
+    
         val posterUrl = document.selectFirst("div.afis img, img.afis, img.img-back, img.img-back-cat")
             ?.let { fixUrlNull(it.attr("data-src") ?: it.attr("src")) }
+    
         val plot = document.selectFirst("div.dizi-aciklama, div.aciklama, p")?.text()?.trim()
 
         val episodes = mutableListOf<Episode>()
+    
         if (url.contains("/dizi/") || url.contains("/diziler/")) {
-            // Dizi sayfası için tüm bölümleri topla
+            // Dizi sayfasıysa tüm bölümleri topla
             var currentPage = 0
             var hasMorePages = true
 
@@ -189,14 +221,15 @@ override suspend fun loadLinks(
         // Extract the YouTube URL from the id parameter
         val youtubeUrl = Regex("""id=(https://.*?)(?:&|$)""").find(iframeSrc)?.groupValues?.get(1)
         if (youtubeUrl != null) {
-            Log.d("DDizi:", "Extracted YouTube URL = $youtubeUrl")
-            loadExtractor(youtubeUrl, "", subtitleCallback, callback)
-            return true
-        } else {
-            // Log failure to extract YouTube URL
-            Log.d("DDizi:", "Failed to extract YouTube URL from iframeSrc = $iframeSrc")
-        }
+        Log.d("DDizi:", "Calling loadExtractor with $youtubeUrl")
+            try {
+                loadExtractor(youtubeUrl, "", subtitleCallback, callback)
+                return true
+            } catch (e: Exception) {
+                Log.e("DDizi:", "loadExtractor failed: ${e.message}", e)
+            }
     }
+}
 
     // Proceed to og:video extraction if YouTube iframe is not present or fails
     val ogVideo = document.selectFirst("meta[property=og:video]")?.attr("content")
