@@ -1,10 +1,10 @@
 // ! Bu araç @Kraptor123 tarafından | @kekikanime için yazılmıştır.
-version = 3
+version = 1
 
 cloudstream {
     authors     = listOf("kraptor")
     language    = "tr"
-    description = "Son çıkan en yeni filmleri türkçe dublaj ve türkçe altyazılı dil seçenekleriyle Full HD (1080p) kalitelerinde film izle."
+    description = "Yabancı film izle olarak vizyondaki en yeni yabancı filmleri türkçe dublaj ve altyazılı olarak en hızlı şekilde full hd olarak sizlere sunuyoruz."
 
     /**
      * Status int as the following:
@@ -15,5 +15,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("Movie, TvSeries")
-    iconUrl = "https://filmhane.net/uploads/logo/original/logo-7349.webp"
+    iconUrl = "https://sinefy3.com/assets/img/sinefy/icon-144x144.png"
 }
