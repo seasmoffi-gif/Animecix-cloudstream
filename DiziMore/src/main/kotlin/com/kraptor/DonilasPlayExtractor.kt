@@ -3,13 +3,13 @@
 package com.kraptor
 
 import android.R.id.input
-import android.util.Log
-import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.utils.ExtractorApi
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.*
+import com.lagradost.api.Log
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.lagradost.cloudstream3.extractors.helper.AesHelper
+import com.lagradost.cloudstream3.utils.*
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -18,113 +18,101 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 
-class DonilasPlayExtractor : ExtractorApi() {
+class DonilasPlay : ExtractorApi() {
     override val name = "DonilasPlay"
     override val mainUrl = "https://donilasplay.com"
     override val requiresReferer = true
 
-    override suspend fun getUrl(url: String, referer: String?): List<ExtractorLink> {
-        val links = mutableListOf<ExtractorLink>()
-        try {
-            // Load the iframe or player page
-            val iframeDoc = app.get(url).document
+    override suspend fun getUrl(url: String, referer: String?, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
+        val m3uLink:String?
+        val extRef  = referer ?: ""
+        val iSource = app.get(url, referer=extRef).text
 
+        val bePlayer = Regex("""bePlayer\('([^']+)',\s*'(\{[^}]+\})'\);""").find(iSource)?.groupValues
+        if (bePlayer != null) {
+            val bePlayerPass = bePlayer[1]
+            val bePlayerData = bePlayer[2]
 
+            // Ters slash'ları silme işlemi KALDIRILDI
+            val encrypted = AesHelper.cryptoAESHandler(bePlayerData, bePlayerPass.toByteArray(), false)
+                ?: throw ErrorLoadingException("failed to decrypt")
 
+            // JSON'ı parse et
+            val json = jacksonObjectMapper().readTree(encrypted)
+            m3uLink = json["video_location"].asText()
 
-            // Find the relevant script containing bePlayer
-            val script = iframeDoc.select("script").mapNotNull { it.html() }
-                .firstOrNull { it.contains("bePlayer") }
-                ?: throw Exception("bePlayer script not found")
-            Log.d("dzmo", "input: $script")
+            // Altyazıları işle (tüm diller dahil)
+            val subtitles = json["strSubtitles"]
+//            Log.d("dkral_ext", "subtitles » $subtitles")
 
-            // Extract parameters via regex
-            val regex = Regex(pattern = """bePlayer\('([^']*)',\s*'([^']*)'\)""", options = setOf(RegexOption.IGNORE_CASE))
+            if (subtitles != null && subtitles.isArray) {
+                for (sub in subtitles) {
+                    val label = sub["label"]?.asText() ?: continue // Unicode otomatik çözülecek (ör: "Tu00fcrkçe" → "Türkçe")
+                    val file = sub["file"]?.asText() ?: continue
+                    val lang = sub["language"]?.asText()?.lowercase() ?: continue
 
-            val match = regex.find(script)
-                ?: throw Exception("bePlayer parameters not found")
+                    // Forced altyazıları hariç tut (opsiyonel, isterseniz bu satırı kaldırın)
+                    if (label.contains("Forced", true)) continue
 
+                    val keywords = listOf("tur", "tr", "türkçe", "turkce")
+                    val language = if (keywords.any { label.contains(it, ignoreCase = true) }) {
+                        "Turkish"
+                    } else {
+                        label
+                    }
 
-
-            val hash = match.groupValues[1]
-            val setJsonRaw = match.groupValues[2]
-                .removeSurrounding("\"", "\"")
-                .removeSurrounding("'", "'")
-
-            Log.d("dzmo", "hash: $hash")
-            Log.d("dzmo", "hash: $setJsonRaw")
-
-            // Decrypt parameters and parse JSON
-            val decrypted = decryptSetParams(setJsonRaw, hash)
-            Log.d("dzmo", "decrypted: $decrypted")
-            val videoLocation = JSONObject(decrypted).getString("video_location")
-            Log.d("dzmo", "videolocation: $videoLocation")
-
-            // Build the HLS link
-            links.add(
-                newExtractorLink(
-                    source = name,
-                    name = "Donilas HLS",
-                    url = videoLocation,
-                    type = ExtractorLinkType.M3U8
-                ) {
-                    quality = Qualities.Unknown.value
-                    headers = mapOf("Referer" to url,
-                        "User-Agent" to "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+                    subtitleCallback.invoke(
+                        SubtitleFile(
+                            lang = language, // Orijinal etiket ("Türkçe Altyazı", "English Subtitle" vb.)
+                            url = fixUrl(mainUrl + file)
                         )
+                    )
                 }
-            )
-        } catch (_: Exception) {
-            // Extraction failed, return empty
+            }
+        } else {
+
+            m3uLink = Regex("""file:"([^"]+)""").find(iSource)?.groupValues?.get(1)
+
+            val trackStr = Regex("""tracks:\[([^]]+)""").find(iSource)?.groupValues?.get(1)
+//            Log.d("dkral_ext", "trackstr » $trackStr")
+            if (trackStr != null) {
+                val tracks:List<Track> = jacksonObjectMapper().readValue("[${trackStr}]")
+
+                for (track in tracks) {
+                    if (track.file == null || track.label == null) continue
+                    if (track.label.contains("Forced")) continue
+
+                    subtitleCallback.invoke(
+                        SubtitleFile(
+                            lang = track.label,
+                            url  = fixUrl(mainUrl + track.file)
+                        )
+                    )
+                }
+            }
         }
-        return links
+        Log.d("dkral_ext", "subtitlecall » $subtitleCallback")
+
+        callback.invoke(
+            newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
+                type = ExtractorLinkType.M3U8 // isM3u8 artık bu şekilde belirtiliyor
+            ) {
+                headers = mapOf(
+                    "Referer" to url,
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0") // Eski "referer" artık headers içinde
+                quality = Qualities.Unknown.value // Kalite ayarlandı
+            }
+        )
     }
 
-    private fun hexStringToByteArray(hex: String): ByteArray {
-        val len = hex.length
-        val out = ByteArray(len / 2)
-        for (i in 0 until len step 2) {
-            out[i / 2] = ((Character.digit(hex[i], 16) shl 4)
-                    + Character.digit(hex[i + 1], 16)).toByte()
-        }
-        return out
-    }
-
-    private fun evpBytesToKey(
-        password: ByteArray,
-        salt: ByteArray,
-        keyLen: Int,
-        ivLen: Int
-    ): Pair<ByteArray, ByteArray> {
-        val md5 = MessageDigest.getInstance("MD5")
-        var prev = ByteArray(0)
-        val result = mutableListOf<Byte>()
-        while (result.size < keyLen + ivLen) {
-            md5.reset()
-            md5.update(prev)
-            md5.update(password)
-            md5.update(salt)
-            val digest = md5.digest()
-            result += digest.toTypedArray()
-            prev = digest
-        }
-        val key = result.take(keyLen).toByteArray()
-        val iv = result.drop(keyLen).take(ivLen).toByteArray()
-        return Pair(key, iv)
-    }
-
-    private fun decryptSetParams(setJson: String, hash: String): String {
-        val obj = JSONObject(setJson)
-        val ctB64 = obj.getString("ct")
-        val ivHex = obj.getString("iv")
-        val sHex = obj.getString("s")
-        val cipherText = android.util.Base64.decode(ctB64, android.util.Base64.DEFAULT)
-        val saltBytes = hexStringToByteArray(sHex)
-        val password = hash.toByteArray(StandardCharsets.UTF_8)
-        val (key, iv) = evpBytesToKey(password, saltBytes, 32, 16)
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
-        val plain = cipher.doFinal(cipherText)
-        return String(plain, StandardCharsets.UTF_8)
-    }
+    data class Track(
+        @JsonProperty("file")     val file: String?,
+        @JsonProperty("label")    val label: String?,
+        @JsonProperty("kind")     val kind: String?,
+        @JsonProperty("language") val language: String?,
+        @JsonProperty("default")  val default: String?
+    )
 }

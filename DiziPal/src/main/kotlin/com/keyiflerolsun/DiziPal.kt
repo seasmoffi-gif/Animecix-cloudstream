@@ -2,15 +2,15 @@
 
 package com.keyiflerolsun
 
-import android.util.Log
-import org.jsoup.nodes.Element
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import com.lagradost.api.Log
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
+import org.jsoup.nodes.Element
 
 class DiziPal : MainAPI() {
-    override var mainUrl              = "https://dizipal953.com"
+    override var mainUrl              = "https://dizipal1201.com"
     override var name                 = "DiziPal"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -84,9 +84,11 @@ class DiziPal : MainAPI() {
 
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val puan      = this.selectFirst("span.imdb.lessDot")?.text()?.trim()
 
         return newTvSeriesSearchResponse(title, href.substringBefore("/sezon"), TvType.TvSeries) {
             this.posterUrl = posterUrl
+            this.score     = Score.from10(puan)
         }
     }
 
@@ -94,19 +96,30 @@ class DiziPal : MainAPI() {
         val title     = this.selectFirst("span.title")?.text() ?: return null
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val puan      = this.selectFirst("span.imdb.lessDot")?.text()?.trim()
 
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+            this.posterUrl = posterUrl
+            this.score     = Score.from10(puan)
+        }
     }
 
     private fun SearchItem.toPostSearchResult(): SearchResponse {
         val title     = this.title
         val href      = "${mainUrl}${this.url}"
         val posterUrl = this.poster
+        val puan      = this.imdb
 
         return if (this.type == "series") {
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                this.posterUrl = posterUrl
+                this.score = Score.from10(puan)
+            }
         } else {
-            newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+            newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+                this.score = Score.from10(puan)
+            }
         }
     }
 
@@ -143,7 +156,7 @@ class DiziPal : MainAPI() {
         val year        = document.selectXpath("//div[text()='Yapım Yılı']//following-sibling::div").text().trim().toIntOrNull()
         val description = document.selectFirst("div.summary p")?.text()?.trim()
         val tags        = document.selectXpath("//div[text()='Türler']//following-sibling::div").text().trim().split(" ").map { it.trim() }
-        val rating      = document.selectXpath("//div[text()='IMDB Puanı']//following-sibling::div").text().trim().toRatingInt()
+        val rating      = document.selectXpath("//div[text()='IMDB Puanı']//following-sibling::div").text().trim()
         val duration    = Regex("(\\d+)").find(document.selectXpath("//div[text()='Ortalama Süre']//following-sibling::div").text())?.value?.toIntOrNull()
 
         if (url.contains("/dizi/")) {
@@ -151,6 +164,7 @@ class DiziPal : MainAPI() {
 
             val episodes    = document.select("div.episode-item").mapNotNull {
                 val epName    = it.selectFirst("div.name")?.text()?.trim() ?: return@mapNotNull null
+                val epPoster = fixUrlNull(it.selectFirst("img")?.attr("src")) ?: return@mapNotNull null
                 val epHref    = fixUrlNull(it.selectFirst("a")?.attr("href")) ?: return@mapNotNull null
                 val epEpisode = it.selectFirst("div.episode")?.text()?.trim()?.split(" ")?.get(2)?.replace(".", "")?.toIntOrNull()
                 val epSeason  = it.selectFirst("div.episode")?.text()?.trim()?.split(" ")?.get(0)?.replace(".", "")?.toIntOrNull()
@@ -159,6 +173,7 @@ class DiziPal : MainAPI() {
                     this.name    = epName
                     this.episode = epEpisode
                     this.season  = epSeason
+                    this.posterUrl = epPoster
                 }
             }
 
@@ -167,7 +182,7 @@ class DiziPal : MainAPI() {
                 this.year      = year
                 this.plot      = description
                 this.tags      = tags
-                this.rating    = rating
+                this.score = Score.from10(rating)
                 this.duration  = duration
             }
         } else { 
@@ -178,7 +193,7 @@ class DiziPal : MainAPI() {
                 this.year      = year
                 this.plot      = description
                 this.tags      = tags
-                this.rating    = rating
+                this.score = Score.from10(rating)
                 this.duration  = duration
             }
         }
@@ -198,15 +213,28 @@ class DiziPal : MainAPI() {
         }
 
         val subtitles = Regex(""""subtitle":"([^"]+)""").find(iSource)?.groupValues?.get(1)
+        Log.d("DZPAL", "Altyazi: ${subtitles}")
         if (subtitles != null) {
             if (subtitles.contains(",")) {
                 subtitles.split(",").forEach {
                     val subLang = it.substringAfter("[").substringBefore("]")
                     val subUrl  = it.replace("[${subLang}]", "")
 
+                    val subDil = if (subLang.contains("Turkce", ignoreCase = true)) {
+                        "Turkish"
+                    } else if (subLang.contains("Ingilizce", ignoreCase = true)) {
+                        "English"
+                    } else if (subLang.contains("Türkçe", ignoreCase = true)) {
+                        "Turkish"
+                    } else if (subLang.contains("İngilizce", ignoreCase = true)) {
+                        "English"
+                    } else {
+                        subLang
+                    }
+
                     subtitleCallback.invoke(
                         SubtitleFile(
-                            lang = subLang,
+                            lang = subDil,
                             url  = fixUrl(subUrl)
                         )
                     )
@@ -215,9 +243,16 @@ class DiziPal : MainAPI() {
                 val subLang = subtitles.substringAfter("[").substringBefore("]")
                 val subUrl  = subtitles.replace("[${subLang}]", "")
 
+                val keywords = listOf("tur", "tr", "türkçe", "turkce", "tür")
+                val language = if (keywords.any { subLang.contains(it, ignoreCase = true) }) {
+                    "Turkish"
+                } else {
+                    subLang
+                }
+
                 subtitleCallback.invoke(
                     SubtitleFile(
-                        lang = subLang,
+                        lang = language,
                         url  = fixUrl(subUrl)
                     )
                 )
@@ -226,23 +261,15 @@ class DiziPal : MainAPI() {
 
         callback.invoke(
             newExtractorLink(
-        source = this.name,
-        name = this.name,
-        url = m3uLink,
-        type = ExtractorLinkType.M3U8
-        ) {
-        headers = mapOf("Referer" to "${mainUrl}/")
-        quality = Qualities.Unknown.value
-          }
+                source = this.name,
+                name = this.name,
+                url = m3uLink,
+                type = ExtractorLinkType.M3U8 // isM3u8 = true yerine bu türü belirtiyoruz
+            ) {
+                headers = mapOf("Referer" to "${mainUrl}/") // Referer burada ayarlandı
+                quality = Qualities.Unknown.value // Kalite ayarlandı
+            }
         )
-
-
-        // M3u8Helper.generateM3u8(
-        //     source    = this.name,
-        //     name      = this.name,
-        //     streamUrl = m3uLink,
-        //     referer   = "${mainUrl}/"
-        // ).forEach(callback)
 
         return true
     }

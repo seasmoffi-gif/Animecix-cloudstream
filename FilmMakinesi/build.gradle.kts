@@ -1,7 +1,7 @@
-version = 29
+version = 36
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "usdogu")
+    authors     = listOf("keyiflerolsun", "usdogu", "nikyokki", "kraptor")
     language    = "tr"
     description = "Film Makinesi, en yeni ve en güncel filmleri sitemizde full HD kalite farkı ile izleyebilirsiniz. HD film izle denildiğinde akla gelen en kaliteli film izleme sitesi."
 
@@ -13,6 +13,6 @@ cloudstream {
      * 3: Beta only
     **/
     status  = 1 // will be 3 if unspecified
-    tvTypes = listOf("Movie")
+    tvTypes = listOf("Movie", "TvSeries")
     iconUrl = "https://www.google.com/s2/favicons?domain=filmmakinesi.film&sz=%size%"
 }

@@ -1,7 +1,7 @@
 // ! Bu araç @kraptor123 tarafından yazılmıştır.
 package com.kraptor
 
-import android.util.Log
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.R.string.season
 import com.lagradost.cloudstream3.utils.*
@@ -26,7 +26,7 @@ class CizgiveDizi : MainAPI() {
     private val categoryOrder = listOf(
         "çd", "diz", "ani", "yans", "pro", "bel", "kom", "mac", "çi", "yi",
         "sih", "yem", "sav", "ftb", "pemd", "müz", "giz", "kork", "eği", "dra", "gh",
-        "tıp", "yar", "aks", "bilkur", "fant", "spor", "polis", "doğa", "suç", "füt"
+        "tıp", "yar", "aks", "bilkur", "fant", "spor",
     )
 
     // Etiket kodu -> açıklama
@@ -70,7 +70,7 @@ class CizgiveDizi : MainAPI() {
                         val poster = rawPoster?.let { fixImageFormat(it) }
                         results += newTvSeriesSearchResponse(title, url, TvType.Cartoon) { this.posterUrl = poster }
                     }
-            }.onFailure { Log.e("CizgiVeDizi", "Dizi yükleme hatası", it) }
+            }.onFailure { Log.e("CizgiVeDizi", "Dizi yükleme hatası $it") }
 
             // Filmler
             runCatching {
@@ -86,7 +86,7 @@ class CizgiveDizi : MainAPI() {
                         val poster = rawPoster?.let { fixImageFormat(it) }
                         results += newMovieSearchResponse(title, url, TvType.Movie) { this.posterUrl = poster }
                     }
-            }.onFailure { Log.e("CizgiVeDizi", "Film yükleme hatası", it) }
+            }.onFailure { Log.e("CizgiVeDizi", "Film yükleme hatası $it") }
 
             // Karışık listeleme için karıştır
             results.shuffle()
@@ -107,7 +107,7 @@ class CizgiveDizi : MainAPI() {
                 newTvSeriesSearchResponse(title, url, TvType.Cartoon) { this.posterUrl = poster }
             }
         }.getOrElse {
-            Log.e("CizgiVeDizi", "Ana sayfa yükleme hatası", it)
+            Log.e("CizgiVeDizi", "Ana sayfa yükleme hatası $it")
             emptyList()
         }
 
@@ -169,7 +169,7 @@ class CizgiveDizi : MainAPI() {
         if (url.isEmpty()) return ""
         val encodedUrl = URLEncoder.encode(url, "UTF-8")
         return try {
-            "https://res.cloudinary.com/djjnbig4t/image/fetch/f_auto/$encodedUrl"
+            "https://res.cloudinary.com/di0j4jsa8/image/fetch/f_auto/$encodedUrl"
         } catch (e: Exception) {
             url
         }
@@ -205,62 +205,89 @@ class CizgiveDizi : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
+    return try {
         val doc = app.get(url).document
         val isMovie = url.contains("/film/")
-        return if (!isMovie) loadSeries(doc, url) else loadMovie(doc, url)
+        if (!isMovie) loadSeries(doc, url) else loadMovie(doc, url)
+    } catch (e: Exception) {
+        null
     }
+}
 
-    private suspend fun loadSeries(doc: Document, url: String) = runCatching {
-        val title = doc.selectFirst("div.infoLine h4")!!.text()
-        val rawPoster = fixUrlNull(doc.selectFirst("picture img")!!.attr("src"))!!
-        val poster = fixImageFormat(rawPoster)
-        val plot = doc.selectFirst("div.col-12 p")!!.text().trim()
-        val tags = doc.select(".hero > div:nth-child(2) > div:nth-child(3) > p:nth-child(1)")
-            .flatMap { it.text().split(",") }.map { it.trim() }.filter { it.isNotEmpty() }
-
-        val episodes = doc.select("div.container a.bolum").mapNotNull { el ->
-            val rawName = el.selectFirst(".card-title")!!.text().trim()
-            Log.d("cfdz", "rawname = $rawName")
-            val epName  = rawName.substringAfter(")").trim()
-            Log.d("cfdz", "epname = $epName")
-            val href    = fixUrlNull(el.attr("href"))!!
-            Log.d("cfdz", "href = $href")
-            val num     = Regex("^(\\d+)").find(rawName)!!.groupValues[1].toInt()
-            Log.d("cfdz", "num = $num")
-            val seasonN: Int = el.attr("data-sezon")
-                .toIntOrNull()
-                ?: 1
-            Log.d("cfdz", "seas = $seasonN")
-
+private suspend fun loadSeries(doc: Document, url: String) = runCatching {
+    val titleElement = doc.selectFirst("div.infoLine h4")
+        ?: return@runCatching null
+    val title = titleElement.text()
+    
+    val posterElement = doc.selectFirst("picture img")
+        ?: return@runCatching null
+    val rawPoster = fixUrlNull(posterElement.attr("src"))
+        ?: return@runCatching null
+    val poster = fixImageFormat(rawPoster)
+    
+    val plot = doc.selectFirst("div.col-12 p")?.text()?.trim() ?: ""
+    
+    val tags = doc.select(".hero > div:nth-child(2) > div:nth-child(3) > p:nth-child(1)")
+        .flatMap { it.text().split(",") }
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+    
+    val episodes = doc.select("div.container a.bolum").mapNotNull { el ->
+        try {
+            val cardTitleElement = el.selectFirst(".card-title")
+                ?: return@mapNotNull null
+            val rawName = cardTitleElement.text().trim()
+            val epName = rawName.substringAfter(")").trim()
+            val href = fixUrlNull(el.attr("href")) ?: return@mapNotNull null
+            
+            val regexMatch = Regex("^(\\d+)").find(rawName)
+                ?: return@mapNotNull null
+            val num = regexMatch.groupValues[1].toInt()
+            
+            val seasonN = el.attr("data-sezon").toIntOrNull() ?: 1
+            
             newEpisode(href) {
-                this.name    = epName
+                this.name = epName
                 this.episode = num
-                this.season  = seasonN      // ← this is fine here
+                this.season = seasonN
             }
+        } catch (e: Exception) {
+            null
         }
+    }
+    
+    newTvSeriesLoadResponse(title, url, TvType.Cartoon, episodes) {
+        this.posterUrl = poster
+        this.plot = plot
+        this.tags = tags
+    }
+}.getOrNull()
 
-        newTvSeriesLoadResponse(title, url, TvType.Cartoon, episodes) {
-            this.posterUrl = poster
-            this.plot      = plot
-            this.tags      = tags
-        }
-    }.getOrNull()
-
-    private suspend fun loadMovie(doc: Document, url: String) = runCatching {
-        val rawTitle = doc.selectFirst("h1.fw-light")!!.text()
-        val title = "$rawTitle (film)"
-        val rawPoster = fixUrlNull(doc.selectFirst("picture img")!!.attr("src"))!!
-        val poster = fixImageFormat(rawPoster)
-        val plot = doc.selectFirst(".lead")!!.text().trim()
-        val tags = doc.select(".hero > div:nth-child(2) > div:nth-child(3) > p:nth-child(1)")
-            .flatMap { it.text().split(",") }.map { it.trim() }.filter { it.isNotEmpty() }
-
-        newMovieLoadResponse(title, url, TvType.Movie, url) {
-            this.posterUrl = poster
-            this.plot = plot
-            this.tags = tags
-        }
-    }.getOrNull()
+private suspend fun loadMovie(doc: Document, url: String) = runCatching {
+    val titleElement = doc.selectFirst("h1.fw-light")
+        ?: return@runCatching null
+    val rawTitle = titleElement.text()
+    val title = "$rawTitle (film)"
+    
+    val posterElement = doc.selectFirst("picture img")
+        ?: return@runCatching null
+    val rawPoster = fixUrlNull(posterElement.attr("src"))
+        ?: return@runCatching null
+    val poster = fixImageFormat(rawPoster)
+    
+    val plot = doc.selectFirst(".lead")?.text()?.trim() ?: ""
+    
+    val tags = doc.select(".hero > div:nth-child(2) > div:nth-child(3) > p:nth-child(1)")
+        .flatMap { it.text().split(",") }
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+    
+    newMovieLoadResponse(title, url, TvType.Movie, url) {
+        this.posterUrl = poster
+        this.plot = plot
+        this.tags = tags
+    }
+}.getOrNull()
 
     override suspend fun loadLinks(
         data: String,

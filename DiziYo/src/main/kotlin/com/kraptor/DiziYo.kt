@@ -2,7 +2,7 @@
 
 package com.kraptor
 
-import android.util.Log
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -80,6 +80,13 @@ class DiziYo : MainAPI() {
 
     private fun Element.toMainPageResult(): SearchResponse? {
         val title     = this.selectFirst("div.data")?.text() ?: return null
+        val titleTemiz = title
+            .replace(" (Anime)","")
+            .replace("(Türkçe Dublaj)","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("Türkçe Dublaj izle","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("Türkçe Dublaj","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("(Asya Dizi)","⛩\uFE0F")
+            .replace("izle","")
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(
             this.selectFirst("img")?.let { img ->
@@ -87,7 +94,7 @@ class DiziYo : MainAPI() {
                     ?: img.attr("src").takeIf { it.isNotBlank() }
             }
         )
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        return newMovieSearchResponse(titleTemiz, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
 
 
@@ -101,6 +108,13 @@ class DiziYo : MainAPI() {
 
     private fun Element.toSearchResult(): SearchResponse? {
         val title     = this.selectFirst("div.title")?.text() ?: return null
+        val titleTemiz = title
+            .replace(" (Anime)","")
+            .replace("(Türkçe Dublaj)","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("Türkçe Dublaj izle","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("Türkçe Dublaj","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("(Asya Dizi)","⛩\uFE0F")
+            .replace("izle","")
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(
             this.selectFirst("img")?.let { img ->
@@ -109,7 +123,7 @@ class DiziYo : MainAPI() {
             }
         )
 
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        return newMovieSearchResponse(titleTemiz, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
 
 
@@ -117,16 +131,26 @@ class DiziYo : MainAPI() {
         val document = app.get(url).document
 
         val title = document.selectFirst("div.data h1")?.text()?.trim() ?: return null
-        val poster = fixUrlNull(document.selectFirst("div.poster img")?.attr("src"))
+        val titleTemiz = title
+            .replace(" (Anime)","")
+            .replace("(Türkçe Dublaj)","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("Türkçe Dublaj izle","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("Türkçe Dublaj","\uD83C\uDDF9\uD83C\uDDF7")
+            .replace("(Asya Dizi)","⛩\uFE0F")
+            .replace("izle","")
+        val poster = fixUrlNull(document.selectFirst("div.poster img")?.attr("data-wpfc-original-src"))
         val description = document.selectFirst("div.wp-content p")?.text()?.trim()
         val year = document.selectFirst("div.extra span.date")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("div.sgeneros a").map { it.text() }
-        val rating = document.selectFirst("span.dt_rating_vgs")?.text()?.trim()?.toRatingInt()
+        val rating = document.selectFirst("div.extra:nth-child(5) > b:nth-child(2) > font:nth-child(2)")?.text()?.trim()
         val duration =
             document.selectFirst("div.extra span.runtime")?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
         val actors = document.select("div.persons").map { Actor(it.text()) }
-        val trailer = Regex("""embed/(.*)\?rel""").find(document.html())?.groupValues?.get(1)
-            ?.let { "https://www.youtube.com/embed/$it" }
+        val trailerId = document.selectFirst("#trailer div.embed iframe")?.attr("data-wpfc-original-src")?.substringAfterLast("#")
+                ?.substringBefore("?")
+        Log.d("kraptor_$name","trailerid = $trailerId")
+        val trailer = "https://www.youtube.com/embed/$trailerId"
+        Log.d("kraptor_$name","trailer = $trailer")
 
         val tvType = if (title.contains("(Anime)", ignoreCase = true)) {
             TvType.Anime
@@ -137,44 +161,58 @@ class DiziYo : MainAPI() {
         }
 
         return if (tvType == TvType.TvSeries) {
-            val episodes = document.select("div#episodes ul li a").map {
-                newEpisode(fixUrlNull(it.attr("href"))) {
-                    this.name = it.selectFirst("div.episodiotitle a")?.text()
+            val episodes      = document.select("div#episodes ul li").map { bolumler ->
+                val bolumHref = bolumler.selectFirst("a")?.attr("href")
+                val sezon     = bolumHref?.substringBefore("-sezon")?.substringAfterLast("-")?.toIntOrNull()
+                val bolum     = bolumHref?.substringBefore("-bolum")?.substringAfterLast("-")?.toIntOrNull()
+                newEpisode(fixUrlNull(bolumHref)) {
+                    this.name = bolumler.selectFirst("div.episodiotitle a")?.text()
+                    this.posterUrl = bolumler.selectFirst("img")?.attr("data-wpfc-original-src")
+                    this.season  = sezon
+                    this.episode = bolum
                 }
             }
-            newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+            newTvSeriesLoadResponse(titleTemiz, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 addActors(actors)
                 addTrailer(trailer)
 
             }
         } else if (tvType == TvType.Anime) {
-            val episodes = document.select("div#episodes ul li a").map {
-                newEpisode(fixUrlNull(it.attr("href"))) {
-                    this.name = it.selectFirst("div.episodiotitle a")?.text()
+            val episodes      = document.select("div#episodes ul li").map { bolumler ->
+                val bolumHref = bolumler.selectFirst("a")?.attr("href")
+                val sezon     = bolumHref?.substringBefore("-sezon")?.substringAfterLast("-")?.toIntOrNull()
+                val bolum     = bolumHref?.substringBefore("-bolum")?.substringAfterLast("-")?.toIntOrNull()
+                newEpisode(fixUrlNull(bolumHref)) {
+                    this.name = bolumler.selectFirst("div.episodiotitle a")?.text()
+                    this.posterUrl = bolumler.selectFirst("img")?.attr("data-wpfc-original-src")
+                    this.season  = sezon
+                    this.episode = bolum
                 }
+            }.let { list ->
+                mutableMapOf(DubStatus.Subbed to list)
             }
-            newTvSeriesLoadResponse(title, url, TvType.Anime, episodes) {
+            newAnimeLoadResponse(titleTemiz, url, TvType.Anime, true) {
                 this.posterUrl = poster
+                this.episodes = episodes
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
-                addActors(actors)
+                this.score = Score.from10(rating)
                 addTrailer(trailer)
 
             }
         } else {
-            newMovieLoadResponse(title, url, TvType.Movie, url) {
+            newMovieLoadResponse(titleTemiz, url, TvType.Movie, url) {
                 this.posterUrl = poster
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 addActors(actors)
                 addTrailer(trailer)

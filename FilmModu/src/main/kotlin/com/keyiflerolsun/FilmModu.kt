@@ -2,15 +2,15 @@
 
 package com.keyiflerolsun
 
-import android.util.Log
-import org.jsoup.nodes.Element
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+import com.lagradost.cloudstream3.utils.*
+import org.jsoup.nodes.Element
 
 class FilmModu : MainAPI() {
-    override var mainUrl              = "https://www.filmmodu.io"
+    override var mainUrl              = "https://www.filmmodu.nl"
     override var name                 = "FilmModu"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -18,6 +18,7 @@ class FilmModu : MainAPI() {
     override val supportedTypes       = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/hd-populer-filmler"          to "En Çok İzlenen Filmler",
         "${mainUrl}/hd-film-kategori/4k-film-izle"          to "4K",
         "${mainUrl}/hd-film-kategori/aile-filmleri"         to "Aile",
         "${mainUrl}/hd-film-kategori/aksiyon"               to "Aksiyon",
@@ -58,9 +59,13 @@ class FilmModu : MainAPI() {
     private fun Element.toMainPageResult(): SearchResponse? {
         val title     = this.selectFirst("a")?.text() ?: return null
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("picture img")?.attr("src"))
+        val posterUrl = fixUrlNull(this.selectFirst("picture img")?.attr("data-src"))
+        val puan      = this.selectFirst("div.hover-box div.imdb-eclipse span.imdb-rating")?.text()?.trim()
 
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        return newMovieSearchResponse(title, href, TvType.Movie) {
+            this.posterUrl = posterUrl
+            this.score     = Score.from10(puan)
+        }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -81,7 +86,7 @@ class FilmModu : MainAPI() {
         val description = document.selectFirst("p[itemprop='description']")?.text()?.trim()
         val year        = document.selectFirst("span[itemprop='dateCreated']")?.text()?.trim()?.toIntOrNull()
         val tags        = document.select("div.description a[href*='-kategori/']").map { it.text() }
-        val rating      = document.selectFirst("div.description p")?.ownText()?.split(" ")?.last()?.trim()?.toRatingInt()
+        val rating      = document.selectFirst("div.description p")?.ownText()?.split(" ")?.last()?.trim()
         val actors      = document.select("div.description a[href*='-oyuncu-']").map { Actor(it.selectFirst("span")!!.text()) }
         val trailer     = document.selectFirst("div.container iframe")?.attr("src")
 
@@ -90,26 +95,30 @@ class FilmModu : MainAPI() {
             this.plot      = description
             this.year      = year
             this.tags      = tags
-            this.rating    = rating
+            this.score = Score.from10(rating)
             addActors(actors)
             addTrailer(trailer)
         }
     }
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
-        Log.d("FLMMD", "data » $data")
+//        Log.d("kraptor_$name", "data = $data")
         val document = app.get(data).document
 
         document.select("div.alternates a").forEach {
             val altLink = fixUrlNull(it.attr("href")) ?: return@forEach
+//            Log.d("kraptor_$name", "altLink = $altLink")
             val altName = it.text()
             if (altName == "Fragman") return@forEach
 
             val altReq  = app.get(altLink)
             val vidId   = Regex("""var videoId = '(.*)'""").find(altReq.text)?.groupValues?.get(1) ?: return@forEach
+//            Log.d("kraptor_$name", "altLink = $vidId")
             val vidType = Regex("""var videoType = '(.*)'""").find(altReq.text)?.groupValues?.get(1) ?: return@forEach
+//            Log.d("kraptor_$name", "vidType = $vidType")
 
             val vidReq = app.get("${mainUrl}/get-source?movie_id=${vidId}&type=${vidType}").parsedSafe<GetSource>() ?: return@forEach
+//            Log.d("kraptor_$name", "vidReq = $vidReq")
 
             if (vidReq.subtitle != null) {
                 subtitleCallback.invoke(
@@ -126,11 +135,11 @@ class FilmModu : MainAPI() {
                         source  = "${this.name} - $altName",
                         name    = "${this.name} - $altName",
                         url     = fixUrl(source.src),
-                        type    = INFER_TYPE
+                        type    = ExtractorLinkType.M3U8
                     ) {
-                       headers = mapOf("Referer" to "${mainUrl}/")
-                       quality = getQualityFromName(source.label)
-            }
+                        headers = mapOf("Referer" to "${mainUrl}/") // "Referer" ayarı burada yapılabilir
+                        quality = getQualityFromName(source.label)
+                    }
                 )
             }
         }

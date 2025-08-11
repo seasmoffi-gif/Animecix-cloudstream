@@ -3,7 +3,7 @@
 package com.kraptor
 
 import android.os.Build
-import android.util.Log
+import com.lagradost.api.Log
 import androidx.annotation.RequiresApi
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
@@ -13,6 +13,9 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import java.net.URLEncoder
 import com.lagradost.cloudstream3.DubStatus
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import kotlin.coroutines.cancellation.CancellationException
 
 
@@ -24,6 +27,7 @@ class AnimeIzlesene : MainAPI() {
     override val hasQuickSearch = true
     override val supportedTypes = setOf(TvType.Anime, TvType.AnimeMovie, TvType.OVA)
     override val mainPage = mainPageOf(
+        "${mainUrl}/series" to "Yeni Anime Serileri",
         "${mainUrl}/category/aksiyon" to "Aksiyon",
         "${mainUrl}/category/fantastik" to "Fantastik",
         "${mainUrl}/category/isekai" to "Isekai",
@@ -36,7 +40,7 @@ class AnimeIzlesene : MainAPI() {
         "${mainUrl}/category/arabalar" to "Arabalar",
         "${mainUrl}/category/askeri" to "Askeri",
         "${mainUrl}/category/bilim-kurgu" to "Bilim Kurgu",
-        "${mainUrl}/category/boys-love" to "Boys Love",
+        
         "${mainUrl}/category/buyu" to "Büyü",
         "${mainUrl}/category/cocuk" to "Çocuk",
         "${mainUrl}/category/dedektif" to "Dedektif",
@@ -47,7 +51,7 @@ class AnimeIzlesene : MainAPI() {
         "${mainUrl}/category/ecchi" to "Ecchi",
         "${mainUrl}/category/erotik" to "Erotik",
         "${mainUrl}/category/gerilim" to "Gerilim",
-        "${mainUrl}/category/girls-love" to "Girls Love",
+        
         "${mainUrl}/category/gizem" to "Gizem",
         "${mainUrl}/category/gurme" to "Gurme",
         "${mainUrl}/category/harem" to "Harem",
@@ -197,7 +201,7 @@ class AnimeIzlesene : MainAPI() {
         val rating = if (isMovie) {
             null // Rating not available for movies as per your description
         } else {
-            document.selectFirst("div.featured-attr:nth-child(1) > div:nth-child(2) ")?.text()?.trim()?.toRatingInt()
+            document.selectFirst("div.featured-attr:nth-child(1) > div:nth-child(2) ")?.text()?.trim()
         }
 
         val duration = if (isMovie) {
@@ -208,8 +212,11 @@ class AnimeIzlesene : MainAPI() {
                 ?.trim()?.toIntOrNull()
         }
 
-        val trailer = Regex("""embed\/(.*)\?rel""").find(document.html())?.groupValues?.get(1)
-            ?.let { "https://www.youtube.com/embed/$it" }
+        val trailer = document.selectFirst("button[data-remote*=\"trailer=\"]")
+    ?.attr("data-remote")
+    ?.substringAfter("trailer=")
+    ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+
 
         // For movies, create a single episode
         if (isMovie) {
@@ -261,7 +268,7 @@ class AnimeIzlesene : MainAPI() {
             this.plot = description
             this.year = year
             this.tags = tags
-            this.rating = rating
+            this.score = Score.from10(rating)
             this.duration = duration
             addTrailer(trailer)
             this.episodes = episodeMap
@@ -311,18 +318,16 @@ class AnimeIzlesene : MainAPI() {
                         .mapNotNull { it.groups[1]?.value?.replace("&amp;", "&") }
                         .toList()
 
-                    videoUrls.find { it.contains("hdvid.tv") }?.let { url ->
-                        HdBestVidExtractor().getUrl(url, data).forEach(callback)
+                    val fixedUrls = videoUrls.map { url ->
+                        fixUrlNull(url).toString()
+
+                    }
+                    fixedUrls.find { it.contains("hdvid.tv") }?.let { url ->
+                        loadExtractor(url, referer = data, subtitleCallback, callback)
                         foundLinks = true
                     }
 
-                    val fixedUrls = videoUrls.map { url ->
-                        if (url.startsWith("//")) {
-                            "https:$url"
-                        } else {
-                            url
-                        }
-                    }
+
 
                     if (fixedUrls.isNotEmpty()) {
                         foundLinks = true
@@ -330,8 +335,19 @@ class AnimeIzlesene : MainAPI() {
 
                         fixedUrls.forEach { url ->
                             loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
+
+                            callback.invoke(newExtractorLink(
+                                source = "AnimeIzlesene",
+                                name = "AnimeIzlesene",
+                                url = url,
+                                type = ExtractorLinkType.M3U8,
+                                {
+                                    this.quality = Qualities.Unknown.value
+//                                    this.referer = fixedUrls.toString()
+                                }
+                            ))
                         }
-                    }
+                        }
 
                 } catch (e: Exception) {
                     Log.e("Animei", "Hata oluştu: ${e.localizedMessage}")

@@ -2,10 +2,12 @@
 
 package com.keyiflerolsun
 
-import android.util.Log
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import com.lagradost.api.Log
+import com.lagradost.cloudstream3.ErrorLoadingException
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.extractors.helper.AesHelper
+import com.lagradost.cloudstream3.utils.*
 
 class MixPlayHD : ExtractorApi() {
     override var name            = "MixPlayHD"
@@ -30,10 +32,10 @@ class MixPlayHD : ExtractorApi() {
                 source  = this.name,
                 name    = this.name,
                 url     = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
-				type = ExtractorLinkType.M3U8
+                type = ExtractorLinkType.M3U8
             ) {
-                quality = Qualities.Unknown.value
-                headers = mapOf("Referer" to url)
+                headers = mapOf("Referer" to url) // "Referer" ayarı burada yapılabilir
+                quality = getQualityFromName(Qualities.Unknown.value.toString())
             }
         )
     }

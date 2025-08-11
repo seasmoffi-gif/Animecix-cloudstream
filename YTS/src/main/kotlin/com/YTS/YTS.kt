@@ -71,14 +71,14 @@ open class YTS : MainAPI() {
         val tags = document.selectFirst("#mobile-movie-info > h2:nth-child(3)")?.text()?.trim()
             ?.split(" / ")
             ?.map { it.trim() }
-        val rating= document.select("#movie-info > div.bottom-info > div:nth-child(2) > span:nth-child(2)").text().toRatingInt()
+        val rating= document.select("#movie-info > div.bottom-info > div:nth-child(2) > span:nth-child(2)").text()
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
-                this.posterUrl = poster
-                this.plot = title
-                this.year = year
-                this.rating=rating
-                this.tags = tags
-            }
+            this.posterUrl = poster
+            this.plot = title
+            this.year = year
+            this.score = Score.from10(rating)
+            this.tags = tags
+        }
     }
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
@@ -102,6 +102,6 @@ open class YTS : MainAPI() {
     }
 
     private fun getURL(url: String): String {
-            return "${mainUrl}$url"
+        return "${mainUrl}$url"
     }
 }

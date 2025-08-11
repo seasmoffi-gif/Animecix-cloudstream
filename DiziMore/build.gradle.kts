@@ -1,8 +1,8 @@
 // ! Bu araç @Kraptor123 tarafından | @kekikanime için yazılmıştır.
-version = 2
+version = 12
 
 cloudstream {
-    authors     = listOf("kraptor")
+    authors     = listOf("kraptor","kerimmkirac")
     language    = "tr"
     description = "Sadece Dizi izlemenin Tek Adresin yerli yabancı dizi izlemek için dizimore.com"
 
@@ -15,5 +15,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("TvSeries")
-    iconUrl = "view-source:https://dizimore.com/wp-content/uploads/2024/03/morefav.png"
+    iconUrl = "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://dizimore.com&size=64"
 }

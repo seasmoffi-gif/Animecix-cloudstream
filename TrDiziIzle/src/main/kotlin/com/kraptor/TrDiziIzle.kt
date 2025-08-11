@@ -2,7 +2,7 @@
 
 package com.kraptor
 
-import android.util.Log
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.extractors.*
@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitAll
 
 class TrDiziIzle : MainAPI() {
-    override var mainUrl = "https://www.trdiziizle.vip"
+    override var mainUrl = "https://www.trdiziizle.vip/"
     override var name = "TrDiziIzle"
     override val hasMainPage = true
     override var lang = "tr"
@@ -40,8 +40,8 @@ class TrDiziIzle : MainAPI() {
         val jobs = kategoriler.map { (turParam, gorunenAd) ->
             async(Dispatchers.IO) {
                 val document = app.post(
-                    "https://www.trdiziizle.vipwp-admin/admin-ajax.php",
-                    referer = "https://www.trdiziizle.vipdizi-arsivi-01/",
+                    "https://www.trdiziizle.vip/wp-admin/admin-ajax.php",
+                    referer = "https://www.trdiziizle.vip/dizi-arsivi-01/",
                     headers = mapOf(
                         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                                 "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
@@ -125,7 +125,6 @@ class TrDiziIzle : MainAPI() {
             .selectFirst("span.dt_rating_vgs")
             ?.text()
             ?.trim()
-            ?.toRatingInt()
         val trailer = Regex("""embed\/(.*)\?rel""")
             .find(document.html())
             ?.groupValues
@@ -172,7 +171,7 @@ class TrDiziIzle : MainAPI() {
             this.plot = description
             this.year = year
             this.tags = tags
-            this.rating = rating
+            this.score = Score.from10(rating)
             addActors(actors)
             trailer?.let { addTrailer(it) }
         }
@@ -281,7 +280,7 @@ class TrDiziIzle : MainAPI() {
                                 name = "TrDizi",
                                 source = "Yandex - TrDizi",
                                 url = resolvedUrl,
-                                type = ExtractorLinkType.VIDEO
+                                type = INFER_TYPE
                             ) {
                                 quality = Qualities.Unknown.value
                                 referer = videoUrl
@@ -305,7 +304,7 @@ class TrDiziIzle : MainAPI() {
                                 name = "TrDizi",
                                 source = "TrDizi",
                                 url = videoUrl,
-                                type = type
+                                type = INFER_TYPE
                             ) {
                                 quality = Qualities.Unknown.value
                                 referer = videoUrl

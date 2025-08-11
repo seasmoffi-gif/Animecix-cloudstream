@@ -2,25 +2,12 @@
 
 package com.nikyokki
 
-import android.util.Log
-import com.lagradost.cloudstream3.HomePageResponse
-import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.api.Log
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.lagradost.cloudstream3.MainAPI
-import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.SearchResponse
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.fixUrlNull
-import com.lagradost.cloudstream3.mainPageOf
-import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieLoadResponse
-import com.lagradost.cloudstream3.newMovieSearchResponse
-import com.lagradost.cloudstream3.toRatingInt
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class `4KFilmIzlesene` : MainAPI() {
@@ -34,6 +21,7 @@ class `4KFilmIzlesene` : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/"                   to "Yeni Eklenenler",
         "${mainUrl}/tur/aile-filmleri/"             to "Aile",
         "${mainUrl}/tur/aksiyon-filmleri/"          to "Aksiyon",
         "${mainUrl}/tur/animasyon-filmleri/"        to "Animasyon",
@@ -63,7 +51,7 @@ class `4KFilmIzlesene` : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}/page/${page}").document
+        val document = app.get("${request.data}page/${page}").document
         val home = document.select("div.film-box").mapNotNull { it.toMainPageResult() }
 
         return newHomePageResponse(request.name, home)
@@ -72,13 +60,21 @@ class `4KFilmIzlesene` : MainAPI() {
     private fun Element.toMainPageResult(): SearchResponse? {
         val title     = this.selectFirst("div.name")?.text() ?: return null
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val puan      = this.selectFirst("span.align-right")?.text()?.trim()
+//        Log.d("kraptor_$name","puan = $puan")
         if (this.selectFirst("div.img img")?.attr("data-lazy-src") == "" ||
             this.selectFirst("div.img img")?.attr("data-lazy-src") == null) {
             val posterUrl = fixUrlNull(this.selectFirst("div.img img")?.attr("src"))
-            return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+            return newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+                this.score     = Score.from10(puan)
+            }
         } else {
             val posterUrl = fixUrlNull(this.selectFirst("div.img img")?.attr("data-lazy-src"))
-            return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+            return newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+                this.score     = Score.from10(puan)
+            }
         }
     }
 
@@ -103,7 +99,6 @@ class `4KFilmIzlesene` : MainAPI() {
         val tags = document.select("div.category a[href*='-filmleri/']").map { it.text() }
         val rating =
             document.selectFirst("div.imdb-count")?.text()?.split(" ")?.first()?.trim()
-                ?.toRatingInt()
         val actors = document.select("div.actors").map { it.text() }
         val trailer = document.selectFirst("div.container iframe")?.attr("src")
 
@@ -112,7 +107,7 @@ class `4KFilmIzlesene` : MainAPI() {
             this.plot = description
             this.year = year
             this.tags = tags
-            this.rating = rating
+            this.score = Score.from10(rating)
             addActors(actors)
             addTrailer(trailer)
         }

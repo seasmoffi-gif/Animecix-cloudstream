@@ -2,8 +2,8 @@
 
 package com.keyiflerolsun
 
-import android.util.Log
-import com.lagradost.cloudstream3.*
+import com.lagradost.api.Log
+import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.utils.*
 
 open class PixelDrain : ExtractorApi() {
@@ -12,19 +12,19 @@ open class PixelDrain : ExtractorApi() {
     override val requiresReferer = true
 
     override suspend fun getUrl(url: String, referer: String?, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
-        val pixelId      = url.substringAfterLast("/")
+        val pixelId      = Regex("""([^/]+)(?=\?download)""").find(url)?.groupValues?.get(1)
         val downloadLink = "${mainUrl}/api/file/${pixelId}?download"
         Log.d("Kekik_${this.name}", "downloadLink » $downloadLink")
 
         callback.invoke(
             newExtractorLink(
-                source  = this.name,
-                name    = this.name,
+                source  = "pixeldrain - $pixelId",
+                name    = "pixeldrain - $pixelId",
                 url     = downloadLink,
                 type    = INFER_TYPE
-			) {
-                headers = mapOf("Referer" to url)
-                quality = Qualities.Unknown.value
+            ) {
+                headers = mapOf("Referer" to "${mainUrl}/u/${pixelId}?download") // "Referer" ayarı burada yapılabilir
+                quality = getQualityFromName(Qualities.Unknown.value.toString())
             }
         )
     }

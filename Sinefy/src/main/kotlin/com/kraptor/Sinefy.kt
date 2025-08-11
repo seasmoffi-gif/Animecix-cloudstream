@@ -2,7 +2,8 @@
 
 package com.kraptor
 
-import android.util.Log
+import android.annotation.SuppressLint
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -21,45 +22,48 @@ class Sinefy : MainAPI() {
     override var lang                 = "tr"
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Movie, TvType.TvSeries)
-    override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
+    override var sequentialMainPage   = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
+    override var sequentialMainPageDelay       = 250L // ? 0.25 saniye
+    override var sequentialMainPageScrollDelay = 250L // ? 0.25 saniye
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/en-yenifilmler"        to  "Yeni Filmler",
-        "${mainUrl}/netflix-filmleri-izle"        to  "Netflix Filmleri",
-        "${mainUrl}/dizi-izle/netflix"         to   "Netflix Dizileri",
+        "${mainUrl}/page/"          to  "Son Eklenenler",
+        "${mainUrl}/en-yenifilmler"             to  "Yeni Filmler",
+        "${mainUrl}/netflix-filmleri-izle"      to  "Netflix Filmleri",
+        "${mainUrl}/dizi-izle/netflix"          to   "Netflix Dizileri",
         "${mainUrl}/gozat/filmler/ulke/turkiye" to  "Türk Filmleri",
-        "${mainUrl}/gozat/filmler/ulke/kore"   to  "Kore Filmleri",
-        "${mainUrl}/gozat/filmler/belgesel"    to  "Belgesel",
-        "${mainUrl}/gozat/filmler/aile"        to  "Aile Filmleri",
-        "${mainUrl}/gozat/diziler/aile"        to  "Aile Dizileri",
-        "${mainUrl}/gozat/filmler/aksiyon"     to  "Aksiyon Filmleri",
-        "${mainUrl}/gozat/diziler/aksiyon"     to  "Aksiyon Dizileri",
-        "${mainUrl}/gozat/filmler/animasyon"   to  "Animasyon Filmleri",
-        "${mainUrl}/gozat/diziler/animasyon"   to  "Animasyon Dizileri",
-        "${mainUrl}/gozat/filmler/bilim-kurgu" to  "Bilim Kurgu Filmleri",
-        "${mainUrl}/gozat/filmler/dram"        to  "Dram Filmleri",
-        "${mainUrl}/gozat/diziler/dram"        to  "Dram Dizileri",
-        "${mainUrl}/gozat/filmler/fantastik"   to  "Fantastik Filmleri",
-        "${mainUrl}/gozat/diziler/fantastik"   to  "Fantastik Dizileri",
-        "${mainUrl}/gozat/filmler/gerilim"     to  "Gerilim Filmleri",
-        "${mainUrl}/gozat/diziler/gerilim"     to  "Gerilim Dizileri",
-        "${mainUrl}/gozat/filmler/gizem"       to  "Gizem Filmleri",
-        "${mainUrl}/gozat/diziler/gizem"       to  "Gizem Dizileri",
-        "${mainUrl}/gozat/filmler/komedi"      to  "Komedi Filmleri",
-        "${mainUrl}/gozat/diziler/komedi"      to  "Komedi Dizileri",
-        "${mainUrl}/gozat/filmler/korku"       to  "Korku Filmleri",
-        "${mainUrl}/gozat/diziler/korku"       to  "Korku Dizileri",
-        "${mainUrl}/gozat/filmler/macera"      to  "Macera Filmleri",
-        "${mainUrl}/gozat/diziler/macera"      to  "Macera Dizileri",
-        "${mainUrl}/gozat/filmler/muzik"       to  "Müzik Filmleri",
-        "${mainUrl}/gozat/filmler/romantik"    to  "Romantik Filmleri",
-        "${mainUrl}/gozat/diziler/romantik"    to  "Romantik Dizileri",
-        "${mainUrl}/gozat/filmler/savas"       to  "Savaş Filmleri",
-        "${mainUrl}/gozat/diziler/savas"       to  "Savaş Dizileri",
-        "${mainUrl}/gozat/filmler/suc"         to  "Suç Filmleri",
-        "${mainUrl}/gozat/diziler/suc"         to  "Suç Dizileri",
-        "${mainUrl}/gozat/filmler/western"     to  "Western Filmleri",
-        "${mainUrl}/gozat/diziler/western"     to  "Western Dizileri"
+        "${mainUrl}/gozat/filmler/ulke/kore"    to  "Kore Filmleri",
+        "${mainUrl}/gozat/filmler/belgesel"     to  "Belgesel",
+        "${mainUrl}/gozat/filmler/aile"         to  "Aile Filmleri",
+        "${mainUrl}/gozat/diziler/aile"         to  "Aile Dizileri",
+        "${mainUrl}/gozat/filmler/aksiyon"      to  "Aksiyon Filmleri",
+        "${mainUrl}/gozat/diziler/aksiyon"      to  "Aksiyon Dizileri",
+        "${mainUrl}/gozat/filmler/animasyon"    to  "Animasyon Filmleri",
+        "${mainUrl}/gozat/diziler/animasyon"    to  "Animasyon Dizileri",
+        "${mainUrl}/gozat/filmler/bilim-kurgu"  to  "Bilim Kurgu Filmleri",
+        "${mainUrl}/gozat/filmler/dram"         to  "Dram Filmleri",
+        "${mainUrl}/gozat/diziler/dram"         to  "Dram Dizileri",
+        "${mainUrl}/gozat/filmler/fantastik"    to  "Fantastik Filmleri",
+        "${mainUrl}/gozat/diziler/fantastik"    to  "Fantastik Dizileri",
+        "${mainUrl}/gozat/filmler/gerilim"      to  "Gerilim Filmleri",
+        "${mainUrl}/gozat/diziler/gerilim"      to  "Gerilim Dizileri",
+        "${mainUrl}/gozat/filmler/gizem"        to  "Gizem Filmleri",
+        "${mainUrl}/gozat/diziler/gizem"        to  "Gizem Dizileri",
+        "${mainUrl}/gozat/filmler/komedi"       to  "Komedi Filmleri",
+        "${mainUrl}/gozat/diziler/komedi"       to  "Komedi Dizileri",
+        "${mainUrl}/gozat/filmler/korku"        to  "Korku Filmleri",
+        "${mainUrl}/gozat/diziler/korku"        to  "Korku Dizileri",
+        "${mainUrl}/gozat/filmler/macera"       to  "Macera Filmleri",
+        "${mainUrl}/gozat/diziler/macera"       to  "Macera Dizileri",
+        "${mainUrl}/gozat/filmler/muzik"        to  "Müzik Filmleri",
+        "${mainUrl}/gozat/filmler/romantik"     to  "Romantik Filmleri",
+        "${mainUrl}/gozat/diziler/romantik"     to  "Romantik Dizileri",
+        "${mainUrl}/gozat/filmler/savas"        to  "Savaş Filmleri",
+        "${mainUrl}/gozat/diziler/savas"        to  "Savaş Dizileri",
+        "${mainUrl}/gozat/filmler/suc"          to  "Suç Filmleri",
+        "${mainUrl}/gozat/diziler/suc"          to  "Suç Dizileri",
+        "${mainUrl}/gozat/filmler/western"      to  "Western Filmleri",
+        "${mainUrl}/gozat/diziler/western"      to  "Western Dizileri"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -72,6 +76,9 @@ class Sinefy : MainAPI() {
         ) {
             app.get("${request.data}/$page").document
             }
+        else if (request.name.contains("Son Eklenenler")){
+            app.get("${request.data}$page").document
+        }
         else {
             app.get("${request.data}&page=${page}").document
         }
@@ -90,8 +97,12 @@ class Sinefy : MainAPI() {
             ?.firstOrNull { it.endsWith("1x") }
             ?.substringBefore(" ")
         Log.d("sinef", "poster $posterUrl")
+        val puan      = this.selectFirst("span.rating")?.text()?.trim()
 
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        return newMovieSearchResponse(title, href, TvType.Movie) {
+            this.posterUrl = posterUrl
+            this.score     = Score.from10(puan)
+        }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -164,7 +175,7 @@ class Sinefy : MainAPI() {
                         t.equals("MovieSeries", true) -> TvType.TvSeries
                 else                           -> TvType.Movie
             }
-            val year      = item.optInt("object_release_year", 0).takeIf { it > 0 }
+            val year      = item.optInt("object_release_year").takeIf { it > 0 }
             val rawPosterUrl = item.optString("object_poster_url", null)
                 // Eğer AMP cache URL geldiyse, kendi sunucuna çevir; değilse orijinali kullan
                val posterUrl = rawPosterUrl.let { url ->
@@ -224,10 +235,12 @@ class Sinefy : MainAPI() {
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
+    @SuppressLint("SuspiciousIndentation")
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
 
-        val title           = document.selectFirst("h1")?.text()?.trim() ?: return null
+        val title           = document.selectFirst("h1")?.text()?.trim()?.takeIf { !it.contains("429 Too Many Requests") }
+            ?: return null
         val srcset          = document.selectFirst("div.ui.items img")?.attr("data-srcset")
         val posterUrl = srcset
             ?.split(",")
@@ -237,12 +250,14 @@ class Sinefy : MainAPI() {
         val description     = document.selectFirst("p#tv-series-desc")?.text()?.trim()
         val year            = document.selectFirst("table.ui > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(5) > div:nth-child(2)")?.text()?.trim()?.toIntOrNull()
         val tags            = document.select("div.item.categories a").map { it.text() }
-        val rating          = document.selectFirst("span.color-imdb")?.text()?.trim()?.toRatingInt()
+        val rating          = document.selectFirst("span.color-imdb")?.text()?.trim()
         val duration        = document.selectFirst("table.ui > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(6) > div:nth-child(2)")?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
         val recommendations = document.select("div.srelacionados article").mapNotNull { it.toRecommendationResult() }
         val actorNames      = document.select("div.content h5").eachText().map { Actor(it) }
-        val trailer         = Regex("""embed\/(.*)\?rel""").find(document.html())?.groupValues?.get(1)?.let { "https://www.youtube.com/embed/$it" }
-        val seasonLinks = document.select("section.episodes-box")
+val trailer = document.select("div.media-trailer[data-yt]")
+    .mapNotNull { it.attr("data-yt") }
+    .map { "https://www.youtube.com/embed/$it" }        
+    val seasonLinks = document.select("section.episodes-box")
         return if (seasonLinks.isNotEmpty()) {
             val episodes = mutableListOf<Episode>()
             for (seasonLink in seasonLinks) {
@@ -277,7 +292,7 @@ class Sinefy : MainAPI() {
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 this.recommendations = recommendations
                 addActors(actorNames)
@@ -290,7 +305,7 @@ class Sinefy : MainAPI() {
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 this.recommendations = recommendations
                 addActors(actorNames)
@@ -303,8 +318,13 @@ class Sinefy : MainAPI() {
         val title     = this.selectFirst("a img")?.attr("alt") ?: return null
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("a img")?.attr("data-src"))
+        val puan      = this.selectFirst("span.rating")?.text()?.trim()
 
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+
+        return newMovieSearchResponse(title, href, TvType.Movie) {
+            this.posterUrl = posterUrl
+            this.score     = Score.from10(puan)
+        }
     }
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {

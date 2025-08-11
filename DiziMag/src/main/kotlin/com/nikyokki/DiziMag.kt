@@ -2,35 +2,10 @@ package com.nikyokki
 
 import CryptoJS
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.lagradost.api.Log
-import com.lagradost.cloudstream3.Actor
-import com.lagradost.cloudstream3.Episode
-import com.lagradost.cloudstream3.ErrorLoadingException
-import com.lagradost.cloudstream3.HomePageResponse
-import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.lagradost.cloudstream3.MainAPI
-import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.SearchResponse
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.fixUrl
-import com.lagradost.cloudstream3.fixUrlNull
-import com.lagradost.cloudstream3.mainPageOf
-import com.lagradost.cloudstream3.newEpisode
-import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieLoadResponse
-import com.lagradost.cloudstream3.newMovieSearchResponse
-import com.lagradost.cloudstream3.newTvSeriesLoadResponse
-import com.lagradost.cloudstream3.newTvSeriesSearchResponse
-import com.lagradost.cloudstream3.toRatingInt
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.cloudstream3.utils.loadExtractor
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.util.regex.Pattern
@@ -46,12 +21,13 @@ class DiziMag : MainAPI() {
     override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
     // ! CloudFlare bypass
-    override var sequentialMainPage =
-        true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
-    override var sequentialMainPageDelay = 250L  // ? 0.05 saniye
-    override var sequentialMainPageScrollDelay = 250L  // ? 0.05 saniye
+    override var sequentialMainPage            = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
+    override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
+    override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
+
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/kesfet/eyJ0eXBlIjoic2VyaWVzIn0=" to "Yeni Eklenenler",
         "${mainUrl}/dizi/tur/aile" to "Aile",
         "${mainUrl}/dizi/tur/aksiyon-macera" to "Aksiyon-Macera",
         "${mainUrl}/dizi/tur/animasyon" to "Animasyon",
@@ -62,42 +38,42 @@ class DiziMag : MainAPI() {
         "${mainUrl}/dizi/tur/komedi" to "Komedi",
         "${mainUrl}/dizi/tur/savas-politik" to "Savaş Politik",
         "${mainUrl}/dizi/tur/suc" to "Suç",
-
         "${mainUrl}/film/tur/aile" to "Aile Film",
         "${mainUrl}/film/tur/animasyon" to "Animasyon Film",
         "${mainUrl}/film/tur/bilim-kurgu" to "Bilim-Kurgu Film",
-        "${mainUrl}/film/tur/dram" to "Dram Film",
-        "${mainUrl}/film/tur/fantastik" to "Fantastik Film",
-        "${mainUrl}/film/tur/gerilim" to "Gerilim Film",
-        "${mainUrl}/film/tur/gizem" to "Gizem Film",
-        "${mainUrl}/film/tur/komedi" to "Komedi Film",
-        "${mainUrl}/film/tur/korku" to "Korku Film",
-        "${mainUrl}/film/tur/macera" to "Macera Film",
-        "${mainUrl}/film/tur/romantik" to "Romantik Film",
-        "${mainUrl}/film/tur/savas" to "Savaş Film",
-        "${mainUrl}/film/tur/suc" to "Suç Film",
-        "${mainUrl}/film/tur/tarih" to "Tarih Film",
-        "${mainUrl}/film/tur/vahsi-bati" to "Vahşi Batı Film",
+        
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val mainReq = app.get("${request.data}/${page}")
-
+        var sonraki = false
+        val mainReq = if (request.name.contains("Yeni Eklenenler")) {
+            sonraki = true
+            app.get(
+                "${request.data}/${page}",
+                headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0")
+            )
+        } else {
+            app.get(
+                request.data,
+                headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0")
+            )
+        }
         //val document = mainReq.document.body()
         val document = Jsoup.parse(mainReq.body.string())
-        val home = document.select("div.poster-long").mapNotNull { it.diziler() }
+        val home = if (request.name.contains("Yeni Eklenenler")) {
+            document.select("div.filter-result-box").mapNotNull { it.diziler() }
+        } else {
+            document.select("li.w-1\\/2").mapNotNull { it.diziler() }
+        }
 
-        return newHomePageResponse(request.name, home)
+        return newHomePageResponse(request.name, home, hasNext = sonraki)
     }
 
     private fun Element.diziler(): SearchResponse? {
-        val title =
-            this.selectFirst("div.poster-long-subject h2")?.text() ?: return null
-        val href =
-            fixUrlNull(this.selectFirst("div.poster-long-subject a")?.attr("href"))
+        val title = this.selectFirst("h2")?.text() ?: return null
+        val href = fixUrlNull(this.selectFirst("a")?.attr("href"))
                 ?: return null
-        val posterUrl =
-            fixUrlNull(this.selectFirst("div.poster-long-image img")?.attr("data-src"))
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
         return if (href.contains("/dizi/")) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -174,7 +150,7 @@ class DiziMag : MainAPI() {
         val year =
             document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")
                 ?.toIntOrNull()
-        val rating = document.selectFirst("span.color-imdb")?.text()?.trim()?.toRatingInt()
+        val rating = document.selectFirst("span.color-imdb")?.text()?.trim()
         val duration =
             document.selectXpath("//span[text()='Süre']//following-sibling::p").text().trim()
                 .split(" ").first().toIntOrNull()
@@ -199,11 +175,14 @@ class DiziMag : MainAPI() {
                     val epEpisode = blm++
                     val epSeason = szn
                     episodeses.add(
-                        newEpisode(epHref) {
-                            this.name = epName
-                            this.season = epSeason
-                            this.episode = epEpisode
-                        }
+                        newEpisode(
+                            url = epHref,
+                            {
+                                name = epName
+                                season = epSeason
+                                episode = epEpisode
+                            }
+                        )
                     )
                 }
                 szn++
@@ -214,7 +193,7 @@ class DiziMag : MainAPI() {
                 this.year = year
                 this.plot = description
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 addActors(actors)
                 addTrailer("https://www.youtube.com/embed/${trailer}")
             }
@@ -224,7 +203,7 @@ class DiziMag : MainAPI() {
                 this.year = year
                 this.plot = description
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 addActors(actors)
                 addTrailer("https://www.youtube.com/embed/${trailer}")
@@ -243,60 +222,126 @@ class DiziMag : MainAPI() {
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Referer" to "$mainUrl/"
         )
+
+        com.lagradost.api.Log.d("dzmg", "loadLinks: Starting with data URL - $data")
+
         val aa = app.get(mainUrl)
         val ciSession = aa.cookies["ci_session"].toString()
+        com.lagradost.api.Log.d("dzmg", "ci_session cookie obtained: ${ciSession.take(5)}...") // Kısaltılmış log
+
         val document = app.get(
             data, headers = headers, cookies = mapOf(
                 "ci_session" to ciSession
             )
         ).document
-        val iframe =
-            fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: return false
+
+        val iframe = fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: run {
+            com.lagradost.api.Log.e("dzmg", "iframe src not found in document")
+            return false
+        }
+        com.lagradost.api.Log.d("dzmg", "iframe URL found: $iframe")
+
         val docum = app.get(iframe, headers = headers, referer = "$mainUrl/").document
+        com.lagradost.api.Log.d("dzmg", "iframe content fetched, scanning scripts...")
+
         docum.select("script").forEach { sc ->
             if (sc.toString().contains("bePlayer")) {
+                com.lagradost.api.Log.d("dzmg", "bePlayer script found")
                 val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
                 val matcher = pattern.matcher(sc.toString().trimIndent())
                 if (matcher.find()) {
+                    com.lagradost.api.Log.d("dzmg", "bePlayer pattern matched successfully")
                     val key = matcher.group(1)
                     val jsonCipher = matcher.group(2)
-                    val cipherData = ObjectMapper().readValue(
-                        jsonCipher?.replace("\\/", "/"),
-                        Cipher::class.java
-                    )
-                    val ctt = cipherData.ct
-                    val iv = cipherData.iv
-                    val s = cipherData.s
-                    val decrypt = key?.let { CryptoJS.decrypt(it, ctt, iv, s) }
+                    com.lagradost.api.Log.d("dzmg", "decryption key: ${key?.take(3)}..., cipher: ${jsonCipher?.take(10)}...")
 
-                    val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
-
-                    for (sub in jsonData.strSubtitles) {
-                        subtitleCallback.invoke(
-                            SubtitleFile(
-                                lang = sub.label.toString(),
-                                url = "https://epikplayer.xyz${sub.file}"
-                            )
+                    try {
+                        val cipherData = ObjectMapper().readValue(
+                            jsonCipher?.replace("\\/", "/"),
+                            Cipher::class.java
                         )
-                    }
+                        com.lagradost.api.Log.d("dzmg", "cipher data parsed - iv: ${cipherData.iv.take(5)}..., s: ${cipherData.s}")
 
-                    callback.invoke(
-                        newExtractorLink(
-                            source = this.name,
-                            name = this.name,
-                            url = jsonData.videoLocation,
-                            ExtractorLinkType.M3U8
-                        ) {
-                            this.headers = mapOf("Accept" to "*/*", "Referer" to iframe)
-                            this.referer = iframe
-                            this.quality = Qualities.Unknown.value
+                        val decrypt = key?.let { CryptoJS.decrypt(it, cipherData.ct, cipherData.iv, cipherData.s) }
+                        com.lagradost.api.Log.d("dzmg", "decryption result: ${decrypt?.take(50)}...")
+
+                        val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
+                        com.lagradost.api.Log.d("dzmg", "JSON data parsed with ${jsonData.strSubtitles?.size} subtitles")
+
+                        jsonData.strSubtitles?.let { subtitles ->
+                            for (sub in subtitles) {
+                                com.lagradost.api.Log.d("dzmg", "adding subtitle: ${sub.label} (${sub.file})")
+                                val keywords = listOf("tur", "tr", "türkçe", "turkce")
+                                val language = if (keywords.any { sub.label.toString().contains(it, ignoreCase = true) }) {
+                                    "Turkish"
+                                } else {
+                                    sub.label.toString()
+                                }
+                                subtitleCallback.invoke(
+                                    SubtitleFile(
+                                        lang = language,
+                                        url = "https://epikplayer.xyz${sub.file}"
+                                    )
+                                )
+                            }
                         }
-                    )
+
+
+                        com.lagradost.api.Log.d("dzmg", "fetching m3u8 content from ${jsonData.videoLocation}")
+                        val m3u8Content = app.get(
+                            jsonData.videoLocation,
+                            referer = iframe,
+                            headers = mapOf("Accept" to "*/*", "Referer" to iframe)
+                        ).document.body()
+
+                        val regex = Regex("#EXT-X-STREAM-INF:.*? (https?://\\S+)")
+                        val matchResult = regex.find(m3u8Content.text())
+                        val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
+                        com.lagradost.api.Log.d("dzmg", "m3u8 URL extracted: ${m3uUrl.take(50)}...")
+                        val myHeaders = mapOf("Accept" to "*/*", "Referer" to iframe)
+
+                        if (m3uUrl.isNotEmpty()) {
+                            com.lagradost.api.Log.d("dzmg", "invoking callback with m3u8 URL")
+                            callback.invoke(
+                                newExtractorLink(
+                                    source = this.name,
+                                    name = this.name,
+                                    url = jsonData.videoLocation,
+                                    type = ExtractorLinkType.M3U8 // isM3u8 = true yerine ExtractorLinkType belirtiliyor
+                                ) {
+                                    this.headers = myHeaders
+                                    quality = Qualities.Unknown.value
+                                }
+                            )
+                        } else {
+                            com.lagradost.api.Log.w("dzmg", "m3u8 URL extraction failed")
+                        }
+
+                        com.lagradost.api.Log.d("dzmg", "invoking callback with videoLocation")
+                        callback.invoke(
+                            newExtractorLink(
+                                source = this.name,
+                                name = this.name,
+                                url = jsonData.videoLocation,
+                                type = ExtractorLinkType.M3U8 // isM3u8 = true yerine ExtractorLinkType belirtiliyor
+                            ) {
+                                this.headers = myHeaders
+                                quality = Qualities.Unknown.value
+                            }
+                        )
+
+                    } catch (e: Exception) {
+                        com.lagradost.api.Log.e("dzmg", "decryption/parsing error: ${e.stackTraceToString()}")
+                    }
+                } else {
+                    com.lagradost.api.Log.w("dzmg", "bePlayer pattern match failed")
                 }
             }
         }
 
+        com.lagradost.api.Log.d("dzmg", "fallback to loadExtractor")
         loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+
         return true
     }
 }

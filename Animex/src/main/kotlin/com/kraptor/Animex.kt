@@ -2,7 +2,7 @@
 
 package com.kraptor
 
-import android.util.Log
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -20,26 +20,55 @@ class Animex : MainAPI() {
 
 
     override val mainPage = mainPageOf(
+        "" to "Yeni Bölümler",
         "${mainUrl}/animeler/" to "Animeler",
         "${mainUrl}/film/" to "Filmler"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = if (page == 1) {
+        val document = if (page == 1 && !request.name.contains("Yeni Bölümler", ignoreCase = true)) {
             app.get(request.data).document
-        } else {
+        } else if (request.name.contains("Yeni Bölümler")) {
+            app.post("$mainUrl/wp-admin/admin-ajax.php", data = mapOf(
+                "type" to "last-tv",
+                "pageNumber" to "$page",
+                "ppp"   to "20",
+                "action" to "daha_fazla_yukle"
+                ), headers = mapOf("X-Requested-With" to "XMLHttpRequest")).document
+        }
+        else {
             app.get("${request.data}/page/$page/").document
         }
-        val home = document.select("div.poster.poster-md").mapNotNull { it.toMainPageResult() }
+        Log.d("kraptor_","document = $document")
+        val home = buildList {
+            addAll(document.select("div.poster.poster-md").mapNotNull { it.toMainPageResult() })
+            if (request.name.contains("Yeni Bölümler", ignoreCase = true)) {
+                addAll(document.select("li.segment-poster-sm").mapNotNull { it.toMainPageResult() })
+            }
+        }
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title = this.selectFirst("h2")?.text() ?: return null
+        val baseTitle = this.selectFirst("h2")?.text() ?: return null
+        val episodeInfo = this.selectFirst("li.segment-poster-sm span.episode-no")?.text()
+
+        val title = if (!episodeInfo.isNullOrBlank()) {
+            "$baseTitle - $episodeInfo"
+        } else {
+            baseTitle
+        }
+        val rawHref = this.selectFirst("a")?.attr("href") ?: return null
+
+        val href = if (!rawHref.contains("/animeler/") && !rawHref.contains("/film/")) {
+            rawHref
+                .replace(Regex("-\\d+.*"), "") // -sayı- ve sonrasını temizle
+                .replace("https://animex.tr/", "https://animex.tr/animeler/") + "-izle/"
+        } else {
+            rawHref
+        }
         Log.d("Anx", "title = ${title}")
-        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("div.poster-media img")?.attr("data-src"))
-        Log.d("Anx", "poster = ${posterUrl}")
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
         return newAnimeSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
@@ -69,12 +98,14 @@ class Animex : MainAPI() {
         val text = document.selectFirst(".genre-item")?.text() ?: ""
         val year = Regex("""\b\d{4}\b""").find(text)?.value?.toInt()
         val tags = document.select("div.nano-content a").map { it.text() }
-        val rating = document.selectFirst("div.color-imdb")?.text()?.trim()?.toRatingInt()
+        val rating = document.selectFirst("div.color-imdb")?.text()?.trim()
         val duration =
             document.selectFirst("table.ui > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > div:nth-child(2)")
                 ?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
-        val trailer = Regex("""embed/(.*)\?rel""").find(document.html())?.groupValues?.get(1)
-            ?.let { "https://www.youtube.com/embed/$it" }
+        val trailer = document.selectFirst("a.prettyPhoto")?.attr("href")
+    ?.takeIf { it.contains("youtube.com/watch") }
+    ?.replace("watch?v=", "embed/")
+
         val episodeListesi = document.select("div.ajax_post a").mapNotNull { bolumElemanlari ->
 //            val epTitle = document.selectFirst("span.episode-names")?.text()?.trim() ?: return null
             val epHref = fixUrlNull(document.selectFirst("div.ajax_post a")?.attr("href"))
@@ -91,7 +122,7 @@ class Animex : MainAPI() {
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 addTrailer(trailer)
 
@@ -102,7 +133,7 @@ class Animex : MainAPI() {
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 addTrailer(trailer)
                 this.episodes = episodeListesi
@@ -123,46 +154,9 @@ class Animex : MainAPI() {
         if (linkElements.isEmpty()) return false
 
         for (el in linkElements) {
-            val iframeUrl = fixUrlNull(el.attr("data-frame"))
-            Log.d("Animex", "iframeUrl: $iframeUrl")
-            if (iframeUrl == null) continue
-
-            try {
-                when {
-                    iframeUrl.contains("animtube") -> {
-                        AnimTubeExtractor().getUrl(iframeUrl, iframeUrl)
-                            .forEach(callback)
-                        return true
-                    }
-
-                    iframeUrl.contains("animeler.tr") -> {
-                        AnimelerExtractor().getUrl(iframeUrl, iframeUrl)
-                            .forEach(callback)
-                        return true
-                    }
-
-                    iframeUrl.contains("yourupload") -> {
-                        YourUpload().getUrl(iframeUrl, iframeUrl)
-                            .forEach(callback)
-                        return true
-                    }
-
-                    iframeUrl.contains("sibnet") -> {
-                        SibNet().getUrl(iframeUrl, iframeUrl)
-                            ?.forEach(callback)
-                        return true
-                    }
-
-                    else -> {
-                        loadExtractor(iframeUrl, data, subtitleCallback, callback)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w("Animex", "Extractor hata: ${e.message}")
-                continue
-            }
+            val iframeUrl = fixUrlNull(el.attr("data-frame")).toString()
+            loadExtractor(iframeUrl, subtitleCallback, callback)
         }
-
         return true
     }
 }

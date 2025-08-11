@@ -2,12 +2,15 @@
 
 package com.keyiflerolsun
 
-import android.util.Log
-import org.jsoup.nodes.Element
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
+import org.jsoup.nodes.Element
 
 class DiziYou : MainAPI() {
     override var mainUrl              = "https://www.diziyou13.com"
@@ -17,82 +20,62 @@ class DiziYou : MainAPI() {
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.TvSeries)
 
+    override val mainPage = mainPageOf(
+        ""  to "Yeni Eklenenler",
+        "${mainUrl}/"   to "Ana Sayfa",
+//        "" to "Aile",
+//        "" to "Aksiyon",
+//        "" to "Animasyon",
+//        "" to "Belgesel",
+//        "" to "Bilim Kurgu",
+//        "" to "Dram",
+//        "" to "Fantazi",
+//        "" to "Gerilim",
+//        "" to "Gizem",
+//        "" to "Komedi",
+//        "" to "Korku",
+//        "" to "Macera",
+//        "" to "Savaş",
+//        "" to "Suç",
+//        "" to "Vahşi Batı"
+    )
+
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        if (page > 1) return newHomePageResponse(request.name, emptyList())
-    
-        val document = app.get(mainUrl).document
-        val home = ArrayList<HomePageList>()
-    
-        // 1. Popüler Dizilerden Son Bölümler
-        val populer = document.select("div.dsmobil div.listepisodes").mapNotNull { el ->
-            val episodeAnchor = el.selectFirst("a") ?: return@mapNotNull null
-            val fullEpisodeUrl = fixUrlNull(episodeAnchor.attr("href")) ?: return@mapNotNull null
-            val slug = fullEpisodeUrl
-                .removePrefix("$mainUrl/")
-                .replace(Regex("""-\d+-sezon-\d+-bolum/?$"""), "")
-            val href = "$mainUrl/$slug/"
-        
-            // alt="..." değeri başlık olarak
-            val title = episodeAnchor.selectFirst("img[alt]")?.attr("alt")?.trim()
-                ?: return@mapNotNull null
-        
-            // poster görseli (data-src veya src)
-            val poster = fixUrlNull(
-                episodeAnchor.selectFirst("img.lazy")?.attr("data-src")
-                    ?: episodeAnchor.selectFirst("img")?.attr("src")
-            )
-        
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-                posterUrl = poster
-            }
+        val document = if (request.name.contains("Ana Sayfa")) {
+            app.get(
+                request.data,
+                headers = mapOf(
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+                    "Referer" to "$mainUrl/",
+                    "Cookie" to "wordpress_test_cookie=WP+Cookie+check; wordpress_logged_in_32080760cc27b19056828b6dab487783=karaOsman%7C1755826436%7CkTRdcilQ3fHoAaskjoLhyNFfv2PGDakAyZeh2wdpFsL%7C8417df2c2c603c445ffa06dd66f1fa3a8c7c8b875658b65342eeab756500a48d"
+                )
+            ).document
+        } else {
+            app.get(
+                "${mainUrl}/dizi-arsivi/page/$page/?filtrele=imdb&sirala=DESC&yil&imdb&kelime&tur=${request.name}&sirala=DESC&yil&imdb&kelime&tur=${request.name}",
+                headers = mapOf(
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+                    "Referer" to "$mainUrl/",
+                    "Cookie" to "wordpress_test_cookie=WP+Cookie+check; wordpress_logged_in_32080760cc27b19056828b6dab487783=karaOsman%7C1755826436%7CkTRdcilQ3fHoAaskjoLhyNFfv2PGDakAyZeh2wdpFsL%7C8417df2c2c603c445ffa06dd66f1fa3a8c7c8b875658b65342eeab756500a48d"
+                )
+            ).document
         }
-        if (populer.isNotEmpty()) home.add(HomePageList("Popüler Dizilerden Son Bölümler", populer))
-    
-        // 2. Son Eklenen Diziler
-        val sonEklenen = document.select("div.dsmobil2 div#list-series-main").mapNotNull { el ->
-            val href = fixUrlNull(el.selectFirst("div.cat-img-main a")?.attr("href")) ?: return@mapNotNull null
-            val poster = fixUrlNull(el.selectFirst("div.cat-img-main img")?.attr("src"))
-            val title = el.selectFirst("div.cat-title-main a")?.text()?.trim() ?: return@mapNotNull null
-    
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-                posterUrl = poster
-            }
-        }
-        if (sonEklenen.isNotEmpty()) home.add(HomePageList("Son Eklenen Diziler", sonEklenen))
-    
-        // 3. Efsane Diziler
-        val efsane = document.select("div.incontent div#list-series-main").mapNotNull { el ->
-            val href = fixUrlNull(el.selectFirst("div.cat-img-main a")?.attr("href")) ?: return@mapNotNull null
-            val poster = fixUrlNull(el.selectFirst("div.cat-img-main img")?.attr("src"))
-            val title = el.selectFirst("div.cat-title-main a")?.text()?.trim() ?: return@mapNotNull null
-    
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-                posterUrl = poster
-            }
-        }
-        if (efsane.isNotEmpty()) home.add(HomePageList("Efsane Diziler", efsane))
-    
-        // 4. Dikkat Çeken Diziler
-        val dikkat = document.select("div.incontentyeni div#list-series-main").mapNotNull { el ->
-            val href = fixUrlNull(el.selectFirst("div.cat-img-main a")?.attr("href")) ?: return@mapNotNull null
-            val poster = fixUrlNull(el.selectFirst("div.cat-img-main img")?.attr("src"))
-            val title = el.selectFirst("div.cat-title-main a")?.text()?.trim() ?: return@mapNotNull null
-    
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-                posterUrl = poster
-            }
-        }
-        if (dikkat.isNotEmpty()) home.add(HomePageList("Dikkat Çeken Diziler", dikkat))
-    
-        return newHomePageResponse(home)
+
+        val home     = document.select("div.single-item, div#list-series-main").mapNotNull { it.toMainPageResult() }
+
+        return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title     = this.selectFirst("div#categorytitle a")?.text() ?: return null
-        val href      = fixUrlNull(this.selectFirst("div#categorytitle a")?.attr("href")) ?: return null
+        val title     = this.selectFirst("div#categorytitle a, div.cat-title-main")?.text() ?: return null
+        val href      = fixUrlNull(this.selectFirst("div#categorytitle a, a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val score     = this.selectFirst("div.cat-imdb-main")?.text()
 
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+            this.posterUrl = posterUrl
+            this.score     = Score.from10(score)
+        }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -111,7 +94,7 @@ class DiziYou : MainAPI() {
         val description     = document.selectFirst("div.diziyou_desc")?.ownText()?.trim()
         val year            = document.selectFirst("span.dizimeta:contains(Yapım Yılı)")?.nextSibling()?.toString()?.trim()?.toIntOrNull()
         val tags            = document.select("div.genres a").map { it.text() }
-        val rating          = document.selectFirst("span.dizimeta:contains(IMDB)")?.nextSibling()?.toString()?.trim()?.toRatingInt()
+        val rating          = document.selectFirst("span.dizimeta:contains(IMDB)")?.nextSibling()?.toString()?.trim()
         val actors          = document.selectFirst("span.dizimeta:contains(Oyuncular)")?.nextSibling()?.toString()?.trim()?.split(", ")?.map { Actor(it) }
         val trailer         = document.selectFirst("iframe.trailer-video")?.attr("src")
 
@@ -125,6 +108,7 @@ class DiziYou : MainAPI() {
                 this.name = it.selectFirst("div.bolumismi")?.text()?.trim()?.replace(Regex("""[()]"""), "")?.trim() ?: epName
                 this.season = epSeason
                 this.episode = epEpisode
+                this.posterUrl = poster
             }
         }
 
@@ -133,7 +117,7 @@ class DiziYou : MainAPI() {
             this.plot      = description
             this.year      = year
             this.tags      = tags
-            this.rating    = rating
+            this.score = Score.from10(rating)
             addActors(actors)
             addTrailer(trailer)
         }
@@ -179,15 +163,15 @@ class DiziYou : MainAPI() {
 
         for (stream in streamUrls) {
             callback.invoke(
-             newExtractorLink(
-                source = this.name,
-                name = this.name,
-                url = stream.url,
-                type    = INFER_TYPE
-            ) {
-                headers = mapOf("Referer" to "${mainUrl}/")
-                quality = Qualities.Unknown.value
-            }
+                newExtractorLink(
+                    source  = this.name,
+                    name    = this.name,
+                    url     = stream.url,
+                    type = ExtractorLinkType.M3U8
+                ) {
+                    headers = mapOf("Referer" to "${mainUrl}/") // Referer burada ayarlandı
+                    quality = Qualities.Unknown.value // Kalite ayarlandı
+                }
             )
         }
 

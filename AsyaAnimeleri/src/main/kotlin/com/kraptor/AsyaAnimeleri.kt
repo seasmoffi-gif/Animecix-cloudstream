@@ -2,7 +2,7 @@
 
 package com.kraptor
 
-import android.util.Log
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -24,6 +24,8 @@ class AsyaAnimeleri : MainAPI() {
     override val supportedTypes = setOf(TvType.Anime)
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/series/?page=sayfa&status=&type=&order=update" to "Son Eklenenler",
+        "${mainUrl}/series/?page=sayfa&status=&type=&order=popular" to "Popüler",
         "${mainUrl}/genres/aksiyon/page/sayfa/" to "Aksiyon",
         "${mainUrl}/genres/askeri/page/sayfa/" to "Askeri",
         "${mainUrl}/genres/bilim-kurgu/page/sayfa/" to "Bilim-kurgu",
@@ -87,7 +89,7 @@ class AsyaAnimeleri : MainAPI() {
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title = this.selectFirst("div.tt.tts")?.text() ?: return null
+        val title = this.selectFirst("div.tt.tts h2")?.text() ?: return null
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
 
@@ -127,7 +129,11 @@ class AsyaAnimeleri : MainAPI() {
         val description = document.selectFirst("div.entry-content b")?.text()?.trim()
         val year = document.selectFirst("span.split:nth-child(3)")?.text()?.trim()?.toIntOrNull()
         val tags = document.select(".spe > span:nth-child(7)").map { it.text() }
-        val rating = document.selectFirst("div.rating")?.text()?.trim()?.toRatingInt()
+        val rating = document.selectFirst("div.rating")?.text()?.trim()
+        val trailer = document.selectFirst("a.trailerbutton")?.attr("href")
+    ?.takeIf { it.contains("youtube.com/watch") }
+    ?.replace("watch?v=", "embed/")
+
         val duration =
             document.selectFirst(".spe > span:nth-child(4)")?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
         val recommendations = document.select("article.bs").mapNotNull { it.toRecommendationResult() }
@@ -172,8 +178,9 @@ class AsyaAnimeleri : MainAPI() {
             this.plot = description
             this.year = year
             this.tags = tags
-            this.rating = rating
+            this.score = Score.from10(rating)
             this.duration = duration
+            addTrailer(trailer)
             this.recommendations = recommendations
             this.episodes = episodeList
         }

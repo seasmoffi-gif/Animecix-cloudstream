@@ -2,7 +2,7 @@
 
 package com.kraptor
 
-import android.util.Log
+import com.lagradost.api.Log
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
@@ -23,116 +23,56 @@ class Animeler : MainAPI() {
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.Anime)
 
+
     override val mainPage = mainPageOf(
-        "${mainUrl}/genre/action/"           to "Action",
-        "${mainUrl}/genre/adult-cast/"                   to "Adult Cast",
-        "${mainUrl}/genre/adventure/"                    to "Adventure",
-        "${mainUrl}/genre/aksiyon/"                      to "Aksiyon",
-        "${mainUrl}/genre/antropomorfik/"                to "Antropomorfik",
-        "${mainUrl}/genre/arabalar/"                     to "Arabalar",
-        "${mainUrl}/genre/ask-ucgeni/"                   to "Aşk Üçgeni",
+        "${mainUrl}/genre/action/"           to "Aksiyon",
+        "${mainUrl}/genre/adult-cast/"                   to "Yetişkin Aktör",
+        "${mainUrl}/genre/adventure/"                    to "Macera",
         "${mainUrl}/genre/military/"                     to "Askeri",
-        "${mainUrl}/genre/avangart/"                     to "Avangart",
-        "${mainUrl}/genre/avant-garde/"                  to "Avant Garde",
-        "${mainUrl}/genre/bilim-kurgu/"                  to "Bilim Kurgu",
-        "${mainUrl}/genre/boys-love/"                    to "Boys Love",
-        "${mainUrl}/genre/buyu/"                         to "Büyü",
-        "${mainUrl}/genre/cute-girls-doing-cute-things/" to "CGDCT",
-        "${mainUrl}/genre/childcare/"                    to "Childcare",
-        "${mainUrl}/genre/cocuk-bakimi/"                 to "Çocuk Bakımı",
-        "${mainUrl}/genre/cocuklar/"                     to "Çocuklar",
-        "${mainUrl}/genre/comedy/"                       to "Comedy",
-        "${mainUrl}/genre/comic/"                        to "Comic",
-        "${mainUrl}/genre/cultivation/"                  to "Cultivation",
-        "${mainUrl}/genre/dedektif/"                     to "Dedektif",
-        "${mainUrl}/genre/delinquents/"                  to "Delinquents",
-        "${mainUrl}/genre/demons/"                       to "Demons",
-        "${mainUrl}/genre/dogaustu-gucler/"              to "Doğaüstü Güçler",
-        "${mainUrl}/genre/dovus-sanatlari/"              to "Dövüş Sanatları",
+        "${mainUrl}/genre/comedy/"                       to "Komedi",
+        "${mainUrl}/genre/cultivation/"                  to "Yetişim",
+        "${mainUrl}/genre/demons/"                       to "İblisler",
+        "${mainUrl}/genre/dogaustu-gucler/"                             to "Doğaüstü",
+        "${mainUrl}/genre/dovus-sanatlari/"                           to "Dövüş Sanatları",
         "${mainUrl}/genre/dram/"                         to "Dram",
         "${mainUrl}/genre/drama/"                        to "Drama",
         "${mainUrl}/genre/ecchi/"                        to "Ecchi",
         "${mainUrl}/genre/fantastik/"                    to "Fantastik",
         "${mainUrl}/genre/fantasy/"                      to "Fantasy",
-        "${mainUrl}/genre/gag-humor/"                    to "Gag Humor",
-        "${mainUrl}/genre/gerilim/"                      to "Gerilim",
-        "${mainUrl}/genre/girls-love/"                   to "Girls Love",
-        "${mainUrl}/genre/gizem/"                        to "Gizem",
-        "${mainUrl}/genre/gore/"                         to "Gore",
-        "${mainUrl}/genre/gourmet/"                      to "Gourmet",
+        "${mainUrl}/genre/gore/"                         to "Vahşet",
+        "${mainUrl}/genre/gourmet/"                      to "Gurme",
         "${mainUrl}/genre/harem/"                        to "Harem",
-        "${mainUrl}/genre/historical/"                   to "Historical",
-        "${mainUrl}/genre/horror/"                       to "Horror",
-        "${mainUrl}/genre/idol/"                         to "İdol",
-        "${mainUrl}/genre/idols-female/"                 to "Idols (Female)",
-        "${mainUrl}/genre/isekai-2/"                     to "Isekai",
-        "${mainUrl}/genre/iyashikei/"                    to "Iyashikei",
-        "${mainUrl}/genre/josei/"                        to "Josei",
-        "${mainUrl}/genre/komedi/"                       to "Komedi",
-        "${mainUrl}/genre/korku/"                        to "Korku",
-        "${mainUrl}/genre/kumar-oyunu/"                  to "Kumar Oyunu",
-        "${mainUrl}/genre/macera/"                       to "Macera",
-        "${mainUrl}/genre/mahou-shoujo/"                 to "Mahou Shoujo",
-        "${mainUrl}/genre/martial-arts/"                 to "Martial Arts",
-        "${mainUrl}/genre/mecha/"                        to "Mecha",
-        "${mainUrl}/genre/medikal/"                      to "Medikal",
-        "${mainUrl}/genre/military-2/"                   to "Military",
-        "${mainUrl}/genre/mitoloji/"                     to "Mitoloji",
-        "${mainUrl}/genre/music/"                        to "Music",
-        "${mainUrl}/genre/muzik/"                        to "Müzik",
-        "${mainUrl}/genre/mystery/"                      to "Mystery",
-        "${mainUrl}/genre/mythology/"                    to "Mythology",
-        "${mainUrl}/genre/okul/"                         to "Okul",
-        "${mainUrl}/genre/op-m-c/"                       to "OP M.C.",
-        "${mainUrl}/genre/oyun/"                         to "Oyun",
-        "${mainUrl}/genre/parodi/"                       to "Parodi",
-        "${mainUrl}/genre/polisiye/"                     to "Polisiye",
-        "${mainUrl}/genre/psikolojik/"                   to "Psikolojik",
-        "${mainUrl}/genre/psychological/"                to "Psychological",
-        "${mainUrl}/genre/rebirth/"                      to "Rebirth",
-        "${mainUrl}/genre/reenkarnasyon/"                to "Reenkarnasyon",
-        "${mainUrl}/genre/reincarnation/"                to "Reincarnation",
-        "${mainUrl}/genre/revenge/"                      to "Revenge",
-        "${mainUrl}/genre/romance/"                      to "Romance",
-        "${mainUrl}/genre/romantic-subtext/"             to "Romantic Subtext",
+        "${mainUrl}/genre/historical/"                   to "Tarihi",
+        "${mainUrl}/genre/horror/"                       to "Korku",
+        "${mainUrl}/genre/josei/"                        to "Josei", 
+        "${mainUrl}/genre/martial-arts/"                 to "Dovüş Sanatları",
+        "${mainUrl}/genre/mecha/"                        to "Meka",
+        "${mainUrl}/genre/music/"                        to "Müzik",
+        "${mainUrl}/genre/mystery/"                      to "Gizem",
+        "${mainUrl}/genre/mythology/"                    to "Mitoloji",
+        "${mainUrl}/genre/psychological/"                to "Psikolojik",
+        "${mainUrl}/genre/reincarnation/"                to "Reenkarnasyon",
+        "${mainUrl}/genre/romance/"                      to "Romantik",
         "${mainUrl}/genre/romantizm/"                    to "Romantizm",
-        "${mainUrl}/genre/sahne-sanatcilari/"            to "Sahne Sanatçıları",
-        "${mainUrl}/genre/samuray/"                      to "Samuray",
-        "${mainUrl}/genre/school/"                       to "School",
-        "${mainUrl}/genre/sci-fi/"                       to "Sci-Fi",
+        "${mainUrl}/genre/school/"                       to "Okul",
+        "${mainUrl}/genre/sci-fi/"                       to "Bilim Kurgu",
         "${mainUrl}/genre/seinen/"                       to "Seinen",
-        "${mainUrl}/genre/seytan/"                       to "Şeytan",
         "${mainUrl}/genre/shoujo/"                       to "Shoujo",
-        "${mainUrl}/genre/shoujo-ai/"                    to "Shoujo Ai",
         "${mainUrl}/genre/shounen/"                      to "Shounen",
-        "${mainUrl}/genre/shounen-ai/"                   to "Shounen Ai",
-        "${mainUrl}/genre/slice-of-life/"                to "Slice of Life",
-        "${mainUrl}/genre/spor/"                         to "Spor",
-        "${mainUrl}/genre/sports/"                       to "Sports",
-        "${mainUrl}/genre/strategy-game/"                to "Strategy Game",
-        "${mainUrl}/genre/strateji-oyunu/"               to "Strateji Oyunu",
-        "${mainUrl}/genre/super-gucler/"                 to "Süper Güçler",
-        "${mainUrl}/genre/super-power/"                  to "Super Power",
+        "${mainUrl}/genre/slice-of-life/"                to "Yaşamdan kesitler",
+        "${mainUrl}/genre/sports/"                       to "Sporlar",
+        "${mainUrl}/genre/super-power/"                  to "Super Güç",
         "${mainUrl}/genre/supernatural/"                 to "Supernatural",
-        "${mainUrl}/genre/suspense/"                     to "Suspense",
         "${mainUrl}/genre/tarihi/"                       to "Tarihi",
-        "${mainUrl}/genre/team-sports/"                  to "Team Sports",
-        "${mainUrl}/genre/time-travel/"                  to "Time Travel",
-        "${mainUrl}/genre/uzay/"                         to "Uzay",
-        "${mainUrl}/genre/vampir/"                       to "Vampir",
-        "${mainUrl}/genre/video-game/"                   to "Video Game",
-        "${mainUrl}/genre/visual-arts/"                  to "Visual Arts",
-        "${mainUrl}/genre/workplace/"                    to "Workplace",
-        "${mainUrl}/genre/yasamdan-kesitler/"            to "Yaşamdan Kesitler",
-        "${mainUrl}/genre/yemek/"                        to "Yemek",
-        "${mainUrl}/genre/yetiskin-karakterler/"         to "Yetişkin Karakterler",
-        "${mainUrl}/genre/zaman-yolculugu/"              to "Zaman Yolculuğu"
+        "${mainUrl}/genre/team-sports/"                  to "Takım Sporları",
+        "${mainUrl}/genre/video-game/"                   to "Video Oyunu",
+       
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = if (page == 1) {
             app.get(request.data).document
-        } else {
+        }else {
             app.get("${request.data}/page/$page/").document
         }
         val home =
@@ -142,9 +82,9 @@ class Animeler : MainAPI() {
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title = this.selectFirst("h2 a")?.text() ?: return null
+        val title = this.selectFirst("h2 a span.show")?.text() ?: return null
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
@@ -159,7 +99,7 @@ class Animeler : MainAPI() {
     private fun Element.toSearchResult(): SearchResponse? {
         val title = this.selectFirst("h3 a")?.text() ?: return null
         val href = fixUrlNull(this.selectFirst("a.absolute")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
@@ -170,47 +110,73 @@ class Animeler : MainAPI() {
         val document = app.get(url).document
 
         val title = document.selectFirst(".xl\\:w-full h1")?.text()?.trim() ?: return null
-        val poster = fixUrlNull(document.selectFirst("div.anime-image img")?.attr("src"))
+        val poster = fixUrlNull(document.selectFirst("div.anime-image img")?.attr("data-src"))
         val description = document.selectFirst("div.line-clamp-3")?.text()?.trim()
         val tags = document.select("span.leading-6 a").map { it.text() }
         val elements = document.select("li.list-none.mbe-1")
-        val rating = Regex("MAL:\\s*(\\d+(?:\\.\\d+)?)").find(elements.text())?.groups?.get(1)?.value?.toRatingInt()
+        val rating = Regex("MAL:\\s*(\\d+(?:\\.\\d+)?)").find(elements.text())?.groups?.get(1)?.value
         val duration = Regex("Süre:\\s*(\\d+)").find(elements.text())?.groups?.get(1)?.value?.toInt()
         val year = Regex("(\\d{4})").find(elements.text())?.groups?.get(1)?.value?.toInt()
         val recommendations =
             document.select("div.w-full.bg-gradient-to-t.from-primary.to-transparent.rounded.overflow-hidden.shadow.shadow-primary")
                 .mapNotNull { it.toRecommendationResult() }
-        val trailer = Regex("""embed/(.*)\?rel""").find(document.html())?.groupValues?.get(1)
-            ?.let { "https://www.youtube.com/embed/$it" }
-
-        val episodeElements = document.select("div.swiper-slide a")
+        val trailer = Regex("""openVideoEmbed\('([^']+youtube\.com/embed/[^']+)""")
+        .find(document.html())
+        ?.groupValues?.get(1)
+        val episodeElements = document.select("div.swiper-slide a.w-full")
         val isMovie = episodeElements.any { it.attr("href").contains("-movie", ignoreCase = true) }
 
-        val episodeList = episodeElements.mapNotNull { episodeElement ->
-            val epHref = fixUrlNull(episodeElement.attr("href")) ?: return@mapNotNull null
-            val titleText = episodeElement.attr("title").trim()
-            val match = Regex("^(\\d+)\\. Bölüm\\s*-\\s*(.*)$").find(titleText)
+        val seasonLinks = document
+            .select("section.mbe-5 div.relative div.swiper-slide a")
+            .map { it.attr("href") }
+            .distinct()
+            .filter { it.contains("-sezon", ignoreCase = true) }
 
-            val epNumber = match?.groups?.get(1)?.value?.toInt()
-            val epTitle = match?.groups?.get(2)?.value?.trim()
-
+        val firstSeasonEpisodes: List<Episode> = episodeElements.mapNotNull { episodeElement ->
+            val epHref    = fixUrlNull(episodeElement.attr("href")) ?: return@mapNotNull null
+            val epNumber  = episodeElement.selectFirst("span.absolute")
+                ?.text()?.substringAfterLast(" ")
+                ?.toIntOrNull()
             newEpisode(epHref) {
-                this.name = epTitle
-                this.episode = epNumber
+                name    = " Bölüm"
+                episode = epNumber
+                season  = 1
             }
-        }.let { list ->
-            mutableMapOf(DubStatus.Subbed to list)
         }
+
+        val otherSeasons: List<List<Episode>> = seasonLinks.map { sezonUrl ->
+            val doc = app.get(sezonUrl).document
+            doc.select("div.swiper-slide a.w-full").mapNotNull { episodeElement ->
+                val epHref   = fixUrlNull(episodeElement.attr("href")) ?: return@mapNotNull null
+                val epSeason = epHref.substringBeforeLast("-sezon")
+                    .substringAfterLast("-")
+                    .toIntOrNull()
+                val epNumber = episodeElement.selectFirst("span.absolute")
+                    ?.text()?.substringAfterLast(" ")
+                    ?.toIntOrNull()
+                newEpisode(epHref) {
+                    name    = " Bölüm"
+                    episode = epNumber
+                    season  = epSeason
+                }
+            }
+        }
+
+        val allEpisodes: List<Episode> = firstSeasonEpisodes + otherSeasons.flatten()
+
+        val episodeMap: MutableMap<DubStatus, List<Episode>> =
+            mutableMapOf(DubStatus.Subbed to allEpisodes)
 
         Log.d("Animeler", "filmmi = $isMovie")
 
+
         return if (isMovie) {
-            newMovieLoadResponse(title, url, TvType.AnimeMovie, url) {
+            newAnimeLoadResponse(title, url, TvType.AnimeMovie, true) {
                 this.posterUrl = poster
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 this.recommendations = recommendations
                 addTrailer(trailer)
@@ -221,10 +187,10 @@ class Animeler : MainAPI() {
                 this.plot = description
                 this.year = year
                 this.tags = tags
-                this.rating = rating
+                this.score = Score.from10(rating)
                 this.duration = duration
                 this.recommendations = recommendations
-                this.episodes = episodeList
+                this.episodes = episodeMap
                 addTrailer(trailer)
             }
         }
@@ -250,7 +216,7 @@ class Animeler : MainAPI() {
         Log.d("Animeler", "data = $data")
 
         val document = app.get(data).document
-        val linkContainer = document.select("div.player")
+        val linkContainer = document.select("div.episode-player-box")
         if (linkContainer.isEmpty()) {
             Log.w("Animeler", "No player container found")
             return false
@@ -352,17 +318,12 @@ class Animeler : MainAPI() {
                                         }
                                     }
                                 } catch (e: Exception) {
-                                    Log.e("Animeler", "Error loading video for key $key", e)
+                                    Log.e("Animeler", "Error loading video for key $key$e")
                                 }
                             }
                         }.toList().awaitAll()
                     }
 
-                    return true
-                }
-
-                iframeUrl.contains("anizmplayer.com") -> {
-                    AincradExtractor().getUrl(iframeUrl, mainUrl).forEach(callback)
                     return true
                 }
 
@@ -378,7 +339,7 @@ class Animeler : MainAPI() {
             }
 
         } catch (e: Exception) {
-            Log.e("Animeler", "Error loading links", e)
+            Log.e("Animeler", "Error loading links $e")
             return false
         }
     }
