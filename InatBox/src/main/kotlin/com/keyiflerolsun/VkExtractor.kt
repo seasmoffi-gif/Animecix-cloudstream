@@ -1,7 +1,6 @@
 package com.keyiflerolsun
 
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 
 class Vk : ExtractorApi() {
@@ -21,15 +20,14 @@ class Vk : ExtractorApi() {
 
         if (m3u8SourceUrl != null) {
             callback.invoke(
-                newExtractorLink(
+                ExtractorLink(
                     source  = this.name,
                     name    = this.name,
                     url     = m3u8SourceUrl,
+                    referer = this.mainUrl,
+                    quality = Qualities.Unknown.value,
                     type    = ExtractorLinkType.M3U8
-                ) {
-                    headers = mapOf("Referer" to mainUrl) // "Referer" ayarı burada yapılabilir
-                    quality = getQualityFromName(Qualities.Unknown.value.toString())
-                }
+                )
             )
         } else {
             return

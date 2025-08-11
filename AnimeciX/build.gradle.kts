@@ -1,7 +1,7 @@
-version = 27
+version = 20
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "inatchii", "JustRelaxable", "kraptor123")
+    authors     = listOf("keyiflerolsun", "inatchii", "JustRelaxable")
     language    = "tr"
     description = "AnimeciX, animeleri keşfedebileceğiniz ve animeler hakkında her şeyi öğrenebileceğiniz bir paylaşım platformudur."
 
@@ -14,5 +14,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("Anime")
-    iconUrl = "https://www.google.com/s2/favicons?domain=animecix.net&sz=%size%"
+    iconUrl = "https://anm.cx/favicon.ico"
 }

@@ -1,13 +1,13 @@
 package com.keyiflerolsun
 
-import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.plugins.Plugin
+import android.content.Context
 
 @CloudstreamPlugin
-class JetFilmizlePlugin: BasePlugin() {
-    override fun load() {
+class JetFilmizlePlugin: Plugin() {
+    override fun load(context: Context) {
         registerMainAPI(JetFilmizle())
         registerExtractorAPI(PixelDrain())
-        registerExtractorAPI(JetTv())
     }
 }

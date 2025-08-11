@@ -1,7 +1,7 @@
-version = 15
+version = 7
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "kraptor")
+    authors     = listOf("keyiflerolsun")
     language    = "tr"
     description = "ÇizgiMax ile Çizgi Film izlemek artık daha kolay, donmadan full hd ve reklamsız bir sitedir, içerisinde 700 den fazla çizgi film olan, Bu site bu işi profesyonelce yapıyor."
 
@@ -12,7 +12,7 @@ cloudstream {
      * 2: Slow
      * 3: Beta only
     **/
-    status  = 0 // will be 3 if unspecified
+    status  = 1 // will be 3 if unspecified
     tvTypes = listOf("Cartoon")
     iconUrl = "https://www.google.com/s2/favicons?domain=cizgimax.online&sz=%size%"
 }

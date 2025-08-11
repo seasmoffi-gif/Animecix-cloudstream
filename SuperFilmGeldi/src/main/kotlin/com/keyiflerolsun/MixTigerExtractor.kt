@@ -2,12 +2,10 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.lagradost.cloudstream3.ErrorLoadingException
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.app
+import android.util.Log
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.fasterxml.jackson.annotation.JsonProperty
 
 open class MixTiger : ExtractorApi() {
     override val name            = "MixTiger"
@@ -58,10 +56,10 @@ open class MixTiger : ExtractorApi() {
                     name    = this.name,
                     url     = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
                     type    = INFER_TYPE
-                ) {
-                    headers = mapOf("Referer" to extRef) // "Referer" ayarı burada yapılabilir
-                    quality = getQualityFromName(Qualities.Unknown.value.toString())
-                }
+			) {
+                headers = mapOf("Referer" to if (m3uLink.contains("disk.yandex")) "" else extRef)
+                quality = Qualities.Unknown.value
+            }
             )
         }
     }

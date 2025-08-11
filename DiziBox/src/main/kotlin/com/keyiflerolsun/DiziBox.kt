@@ -1,18 +1,19 @@
+// ! Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
 
 package com.keyiflerolsun
 
 import android.util.Base64
-import com.lagradost.api.Log
+import android.util.Log
+import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.network.CloudflareKiller
-import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.utils.StringUtils.decodeUri
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
 
 class DiziBox : MainAPI() {
     override var mainUrl              = "https://www.dizibox.so"
@@ -23,6 +24,7 @@ class DiziBox : MainAPI() {
     override val supportedTypes       = setOf(TvType.TvSeries)
 
     // ! CloudFlare bypass
+    override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/library/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
     override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
 
@@ -34,9 +36,9 @@ class DiziBox : MainAPI() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val request  = chain.request()
             val response = chain.proceed(request)
-            val doc      = Jsoup.parse(response.peekBody(1024 * 1024).string())
+            val doc      = Jsoup.parse(response.peekBody(10 * 1024).string())
 
-            if (doc.text().contains("Güvenlik taramasından geçiriliyorsunuz. Lütfen bekleyiniz..")) {
+            if (response.code == 503 || doc.selectFirst("meta[name='cloudflare']") != null) {
                 return cloudflareKiller.intercept(chain)
             }
 
@@ -45,32 +47,32 @@ class DiziBox : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/tum-bolumler/page/SAYFA/?tip=populer"   to "Popüler Dizilerden Son Bölümler",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?ulke[]=turkiye&yil=&imdb"   to "Yerli",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=aile&yil&imdb"       to "Aile",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=aksiyon&yil&imdb"    to "Aksiyon",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=animasyon&yil&imdb"  to "Animasyon",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=belgesel&yil&imdb"   to "Belgesel",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=bilimkurgu&yil&imdb" to "Bilimkurgu",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=biyografi&yil&imdb"  to "Biyografi",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=dram&yil&imdb"       to "Dram",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=drama&yil&imdb"      to "Drama",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=fantastik&yil&imdb"  to "Fantastik",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=gerilim&yil&imdb"    to "Gerilim",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=gizem&yil&imdb"      to "Gizem",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=komedi&yil&imdb"     to "Komedi",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=korku&yil&imdb"      to "Korku",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=macera&yil&imdb"     to "Macera",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=muzik&yil&imdb"      to "Müzik",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=muzikal&yil&imdb"    to "Müzikal",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=reality-tv&yil&imdb" to "Reality TV",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=romantik&yil&imdb"   to "Romantik",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=savas&yil&imdb"      to "Savaş",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=spor&yil&imdb"       to "Spor",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=suc&yil&imdb"        to "Suç",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=tarih&yil&imdb"      to "Tarih",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=western&yil&imdb"    to "Western",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=yarisma&yil&imdb"    to "Yarışma"
+        "${mainUrl}/ulke/turkiye"              to "Yerli",
+        "${mainUrl}/dizi-arsivi/page/SAYFA/"   to "Dizi Arşivi",
+        "${mainUrl}/tur/aile/page/SAYFA/"      to "Aile",
+        "${mainUrl}/tur/aksiyon/page/SAYFA"    to "Aksiyon",
+        "${mainUrl}/tur/animasyon/page/SAYFA"  to "Animasyon",
+        "${mainUrl}/tur/belgesel/page/SAYFA"   to "Belgesel",
+        "${mainUrl}/tur/bilimkurgu/page/SAYFA" to "Bilimkurgu",
+        "${mainUrl}/tur/biyografi/page/SAYFA"  to "Biyografi",
+        "${mainUrl}/tur/dram/page/SAYFA"       to "Dram",
+        "${mainUrl}/tur/drama/page/SAYFA"      to "Drama",
+        "${mainUrl}/tur/fantastik/page/SAYFA"  to "Fantastik",
+        "${mainUrl}/tur/gerilim/page/SAYFA"    to "Gerilim",
+        "${mainUrl}/tur/gizem/page/SAYFA"      to "Gizem",
+        "${mainUrl}/tur/komedi/page/SAYFA"     to "Komedi",
+        "${mainUrl}/tur/korku/page/SAYFA"      to "Korku",
+        "${mainUrl}/tur/macera/page/SAYFA"     to "Macera",
+        "${mainUrl}/tur/muzik/page/SAYFA"      to "Müzik",
+        "${mainUrl}/tur/muzikal/page/SAYFA"    to "Müzikal",
+        "${mainUrl}/tur/reality-tv/page/SAYFA" to "Reality TV",
+        "${mainUrl}/tur/romantik/page/SAYFA"   to "Romantik",
+        "${mainUrl}/tur/savas/page/SAYFA"      to "Savaş",
+        "${mainUrl}/tur/spor/page/SAYFA"       to "Spor",
+        "${mainUrl}/tur/suc/page/SAYFA"        to "Suç",
+        "${mainUrl}/tur/tarih/page/SAYFA"      to "Tarih",
+        "${mainUrl}/tur/western/page/SAYFA"    to "Western",
+        "${mainUrl}/tur/yarisma/page/SAYFA"    to "Yarışma"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -80,72 +82,45 @@ class DiziBox : MainAPI() {
             cookies     = mapOf(
                 "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744054959089"
+                "dbxu"          to "1743289650198"
             ),
-            interceptor = interceptor
+            interceptor = interceptor, cacheTime = 60
         ).document
-        val home = document.select("article.detailed-article, article.article-episode-card a.figure-link")
-            .mapNotNull { it.toMainPageResult() }
-
+        if (request.name == "Dizi Arşivi") {
+            val home = document.select("article.detailed-article").mapNotNull { it.toMainPageResult() }
+            return newHomePageResponse(request.name, home)
+        }
+        val home = document.select("article.article-series-poster").mapNotNull {
+        it.toMainPageResult()
+    }
         return newHomePageResponse(request.name, home)
     }
 
-    private fun Element.toMainPageResult(): SearchResponse? {
-        val title     = this.selectFirst("h3 a")?.text() ?: this.selectFirst("img")?.attr("alt") ?: return null
-        val posterUrl    = fixUrlNull(this.selectFirst("img")?.attr("src"))
-        val href      = fixUrlNull(this.selectFirst("h3 a")?.attr("href")) ?: (this.selectFirst("a.figure-link")?.attr("href")
-            ?.replace(Regex(pattern = """-[0-9]+-.*""", options = setOf(RegexOption.IGNORE_CASE)),"/")
-            ?.replace("$mainUrl/","$mainUrl/diziler/") ?: return null)
+private fun Element.toMainPageResult(): SearchResponse? {
+    val title = this.selectFirst("a")?.text() ?: return null
+    val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+    val posterUrl = fixUrlNull(
+        this.selectFirst("img")?.let { img ->
+            img.attr("data-src").takeIf { it.isNotBlank() } ?: img.attr("src")
+        }
+    )
 
-
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
-    }
+    return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+}
 
     override suspend fun search(query: String): List<SearchResponse> {
-    val url = "$mainUrl/wp-admin/admin-ajax.php?s=${query}&action=dwls_search"
-    
-    val headers = mapOf(
-        "X-Requested-With" to "XMLHttpRequest",
-        "Accept" to "application/json, text/javascript, */*; q=0.01",
-        "Referer" to "$mainUrl/beta/?s=$query"
-    )
-    
-    val cookies = mapOf(
-        "LockUser" to "true",
-        "isTrustedUser" to "true",
-        "dbxu" to "1744054959089"
-    )
-    
-    val response = app.get(url, headers = headers, cookies = cookies)
-    val jsonResponse = response.parsed<SearchApiResponse>()
-    
-    return jsonResponse.results.mapNotNull { it.toSearchResult() }
-}
+        val document = app.get(
+            "${mainUrl}/?s=${query}",
+            cookies     = mapOf(
+                "LockUser"      to "true",
+                "isTrustedUser" to "true",
+                "dbxu"          to "1743289650198"
+            ),
+            interceptor = interceptor
+        ).document
 
-data class SearchApiResponse(
-    val searchTerms: String,
-    val results: List<SearchResult>
-)
-
-data class SearchResult(
-    val ID: Int,
-    val post_title: String,
-    val post_excerpt: String,
-    val permalink: String,
-    val attachment_thumbnail: String?
-)
-
-private fun SearchResult.toSearchResult(): SearchResponse? {
-    val title = this.post_title.ifEmpty { return null }
-    val href = fixUrlNull(this.permalink) ?: return null
-    
-    val rawPoster = this.attachment_thumbnail
-    val posterUrl = fixUrlNull(rawPoster?.replace("50x50", "200x290"))
-
-    return newMovieSearchResponse(title, href, TvType.AsianDrama) { 
-        this.posterUrl = posterUrl 
+        return document.select("article.detailed-article").mapNotNull { it.toMainPageResult() }
     }
-}
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
@@ -155,7 +130,7 @@ private fun SearchResult.toSearchResult(): SearchResponse? {
             cookies     = mapOf(
                 "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744054959089"
+                "dbxu"          to "1743289650198"
             ),
             interceptor = interceptor
         ).document
@@ -165,7 +140,7 @@ private fun SearchResult.toSearchResult(): SearchResponse? {
         val description = document.selectFirst("div.tv-story p")?.text()?.trim()
         val year        = document.selectFirst("a[href*='/yil/']")?.text()?.trim()?.toIntOrNull()
         val tags        = document.select("a[href*='/tur/']").map { it.text() }
-        val rating      = document.selectFirst("span.label-imdb b")?.text()?.trim()
+        val rating      = document.selectFirst("span.label-imdb b")?.text()?.trim()?.toRatingInt()
         val actors      = document.select("a[href*='/oyuncu/']").map { Actor(it.text()) }
         val trailer     = document.selectFirst("div.tv-overview iframe")?.attr("src")
 
@@ -177,7 +152,7 @@ private fun SearchResult.toSearchResult(): SearchResponse? {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744054959089"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -192,7 +167,6 @@ private fun SearchResult.toSearchResult(): SearchResponse? {
                     this.name = epTitle
                     this.season = epSeason
                     this.episode = epEpisode
-                    this.posterUrl = poster
                 })
             }
         }
@@ -202,7 +176,7 @@ private fun SearchResult.toSearchResult(): SearchResponse? {
             this.plot      = description
             this.year      = year
             this.tags      = tags
-            this.score = Score.from10(rating)
+            this.rating    = rating
             addActors(actors)
             addTrailer(trailer)
         }
@@ -212,48 +186,39 @@ private fun SearchResult.toSearchResult(): SearchResponse? {
         @Suppress("NAME_SHADOWING") var iframe = iframe
 
         if (iframe.contains("/player/king/king.php")) {
-   
-    val subDoc = app.get(
-        iframe.replace("king.php?v=", "king.php?wmode=opaque&v="),
-        referer = data,
-        cookies = mapOf(
-            "LockUser" to "true",
-            "isTrustedUser" to "true",
-            "dbxu" to "1744054959089"
-        ),
-        interceptor = interceptor
-    ).document
+            iframe = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
+            val subDoc = app.get(
+                iframe,
+                referer     = data,
+                cookies     = mapOf(
+                    "LockUser"      to "true",
+                    "isTrustedUser" to "true",
+                    "dbxu"          to "1743289650198"
+                ),
+                interceptor = interceptor
+            ).document
+            val subFrame = subDoc.selectFirst("div#Player iframe")?.attr("src") ?: return false
 
-    
-    val embedUrl = subDoc.selectFirst("div#Player iframe")?.attr("src") ?: return false
+            val iDoc          = app.get(subFrame, referer="${mainUrl}/").text
+            val cryptData     = Regex("""CryptoJS\.AES\.decrypt\("(.*)","""").find(iDoc)?.groupValues?.get(1) ?: return false
+            val cryptPass     = Regex("""","(.*)"\);""").find(iDoc)?.groupValues?.get(1) ?: return false
+            val decryptedData = CryptoJS.decrypt(cryptPass, cryptData)
+            val decryptedDoc  = Jsoup.parse(decryptedData)
+            val vidUrl        = Regex("""file: '(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1) ?: return false
 
-    
-    val sheilaUrl = embedUrl.replace("/embed/", "/embed/sheila/")
+            callback.invoke(
+                newExtractorLink(
+                    source = this.name,
+                    name = this.name,
+                    url = vidUrl,
+                    type = ExtractorLinkType.M3U8 // Tür olarak M3U8 ayarlandı
+                ) {
+                    headers = mapOf("Referer" to vidUrl) // Referer başlığı ayarlandı
+                    quality = getQualityFromName("4k") // Kalite ayarlandı
+                }
+            )
 
-   
-    val m3uContent = app.get(
-        sheilaUrl,
-        referer = embedUrl 
-    ).text
-
-    
-    val m3u8Url = m3uContent.lineSequence()
-        .firstOrNull { it.startsWith("http") } ?: return false
-
-   
-    callback.invoke(
-        newExtractorLink(
-            source = this.name,
-            name = this.name,
-            url = m3u8Url,
-            type = ExtractorLinkType.M3U8
-        ) {
-            headers = mapOf("Referer" to embedUrl)
-            quality = Qualities.P1080.value
-        }
-    )
-}
-else if (iframe.contains("/player/moly/moly.php")) {
+        } else if (iframe.contains("/player/moly/moly.php")) {
             iframe = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
             var subDoc = app.get(
                 iframe,
@@ -261,7 +226,7 @@ else if (iframe.contains("/player/moly/moly.php")) {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744054959089"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -285,7 +250,7 @@ else if (iframe.contains("/player/moly/moly.php")) {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744054959089"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document
@@ -312,7 +277,7 @@ else if (iframe.contains("/player/moly/moly.php")) {
             cookies     = mapOf(
                 "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1744054959089"
+                "dbxu"          to "1743289650198"
             ),
             interceptor = interceptor
         ).document
@@ -328,7 +293,7 @@ else if (iframe.contains("/player/moly/moly.php")) {
                 cookies     = mapOf(
                     "LockUser"      to "true",
                     "isTrustedUser" to "true",
-                    "dbxu"          to "1744054959089"
+                    "dbxu"          to "1743289650198"
                 ),
                 interceptor = interceptor
             ).document

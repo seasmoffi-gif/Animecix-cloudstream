@@ -1,6 +1,6 @@
 package com.keyiflerolsun
 
-import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 
 class CDNJWPlayer : ExtractorApi() {
@@ -15,15 +15,14 @@ class CDNJWPlayer : ExtractorApi() {
         callback: (ExtractorLink) -> Unit
     ) {
         callback.invoke(
-            newExtractorLink(
+            ExtractorLink(
                 source  = this.name,
                 name    = this.name,
                 url     = url,
+                referer = referer ?: "",
+                quality = Qualities.Unknown.value,
                 type    = ExtractorLinkType.M3U8
-            ) {
-                headers = mapOf("Referer" to "") // "Referer" ayarı burada yapılabilir
-                quality = getQualityFromName(Qualities.Unknown.value.toString())
-            }
+            )
         )
     }
 }

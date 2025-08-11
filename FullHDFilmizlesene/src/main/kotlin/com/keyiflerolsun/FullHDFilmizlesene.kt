@@ -2,19 +2,18 @@
 
 package com.keyiflerolsun
 
+import android.util.Log
 import android.util.Base64
-import com.lagradost.api.Log
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.jsoup.nodes.Element
+import org.jsoup.nodes.Document
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 
 class FullHDFilmizlesene : MainAPI() {
     override var mainUrl              = "https://www.fullhdfilmizlesene.so"
@@ -25,33 +24,36 @@ class FullHDFilmizlesene : MainAPI() {
     override val supportedTypes       = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/filmizle/aile-filmleri-hdf-izle"       to "Aile Filmleri",
-        "${mainUrl}/filmizle/aksiyon-filmleri-hdf-izle"    to "Aksiyon Filmleri",
-        "${mainUrl}/filmizle/animasyon-filmleri-fhd-izle"  to "Animasyon Filmleri",
-        "${mainUrl}/filmizle/belgesel-filmleri-izle"       to "Belgeseller",
-        "${mainUrl}/filmizle/bilim-kurgu-filmleri-izle-2"  to "Bilim Kurgu Filmleri",
-        "${mainUrl}/filmizle/bluray-filmler-izle"          to "Blu Ray Filmler",
-        "${mainUrl}/filmizle/cizgi-filmler-fhd-izle"       to "Çizgi Filmler",
-        "${mainUrl}/filmizle/dram-filmleri-hd-izle"        to "Dram Filmleri",
-        "${mainUrl}/filmizle/fantastik-filmler-hd-izle"    to "Fantastik Filmler",
-        "${mainUrl}/filmizle/gerilim-filmleri-fhd-izle"    to "Gerilim Filmleri",
-        "${mainUrl}/filmizle/gizem-filmleri-hd-izle"       to "Gizem Filmleri",
-        "${mainUrl}/filmizle/hint-filmleri-fhd-izle"       to "Hint Filmleri",
-        "${mainUrl}/filmizle/komedi-filmleri-fhd-izle"     to "Komedi Filmleri",
-        "${mainUrl}/filmizle/korku-filmleri-izle-3"        to "Korku Filmleri",
-        "${mainUrl}/filmizle/macera-filmleri-fhd-izle"     to "Macera Filmleri",
-        "${mainUrl}/filmizle/muzikal-filmler-izle"         to "Müzikal Filmler",
-        "${mainUrl}/filmizle/polisiye-filmleri-izle"       to "Polisiye Filmleri",
-        "${mainUrl}/filmizle/psikolojik-filmler-izle"      to "Psikolojik Filmler",
-        "${mainUrl}/filmizle/romantik-filmler-fhd-izle"    to "Romantik Filmler",
-        "${mainUrl}/filmizle/savas-filmleri-fhd-izle"      to "Savaş Filmleri",
-        "${mainUrl}/filmizle/suc-filmleri-izle"            to "Suç Filmleri",
-        "${mainUrl}/filmizle/tarih-filmleri-fhd-izle"      to "Tarih Filmleri",
-        "${mainUrl}/filmizle/western-filmler-hd-izle-3"    to "Western Filmler",
+        "${mainUrl}/en-cok-izlenen-filmler-izle-hd/"            to "En Çok izlenen Filmler",
+        "${mainUrl}/filmizle/imdb-puani-yuksek-filmler-izle-1/" to "IMDB Puanı Yüksek Filmler",
+        "${mainUrl}/filmizle/aile-filmleri-hdf-izle/"           to "Aile Filmleri",
+        "${mainUrl}/filmizle/aksiyon-filmleri-hdf-izle/"         to "Aksiyon Filmleri",
+        "${mainUrl}/filmizle/animasyon-filmleri-fhd-izle/"      to "Animasyon Filmleri",
+        "${mainUrl}/filmizle/belgesel-filmleri-izle/"           to "Belgeseller",
+        "${mainUrl}/filmizle/bilim-kurgu-filmleri-izle-2/"      to "Bilim Kurgu Filmleri",
+        "${mainUrl}/filmizle/bluray-filmler-izle/"              to "Blu Ray Filmler",
+        "${mainUrl}/filmizle/cizgi-filmler-fhd-izle/"           to "Çizgi Filmler",
+        "${mainUrl}/filmizle/dram-filmleri-hd-izle/"            to "Dram Filmleri",
+        "${mainUrl}/filmizle/fantastik-filmler-hd-izle/"        to "Fantastik Filmler",
+        "${mainUrl}/filmizle/gerilim-filmleri-fhd-izle/"        to "Gerilim Filmleri",
+        "${mainUrl}/filmizle/gizem-filmleri-hd-izle/"           to "Gizem Filmleri",
+        "${mainUrl}/filmizle/hint-filmleri-fhd-izle/"            to "Hint Filmleri",
+        "${mainUrl}/filmizle/komedi-filmleri-fhd-izle/"         to "Komedi Filmleri",
+        "${mainUrl}/filmizle/korku-filmleri-izle-3/"            to "Korku Filmleri",
+        "${mainUrl}/filmizle/macera-filmleri-fhd-izle/"         to "Macera Filmleri",
+        "${mainUrl}/filmizle/muzikal-filmler-izle/"             to "Müzikal Filmler",
+        "${mainUrl}/filmizle/polisiye-filmleri-izle/"           to "Polisiye Filmleri",
+        "${mainUrl}/filmizle/psikolojik-filmler-izle/"          to "Psikolojik Filmler",
+        "${mainUrl}/filmizle/romantik-filmler-fhd-izle/"        to "Romantik Filmler",
+        "${mainUrl}/filmizle/savas-filmleri-fhd-izle/"          to "Savaş Filmleri",
+        "${mainUrl}/filmizle/suc-filmleri-izle/"                to "Suç Filmleri",
+        "${mainUrl}/filmizle/tarih-filmleri-fhd-izle/"          to "Tarih Filmleri",
+        "${mainUrl}/filmizle/western-filmler-hd-izle-3/"        to "Western Filmler",
+        "${mainUrl}/filmizle/yerli-filmler-hd-izle/"            to "Yerli Filmler",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}/$page").document
+        val document = app.get("${request.data}${page}").document
         val home     = document.select("li.film").mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(request.name, home)
@@ -61,12 +63,8 @@ class FullHDFilmizlesene : MainAPI() {
         val title     = this.selectFirst("span.film-title")?.text() ?: return null
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
-        val rating    = this.selectFirst("span.imdb")?.text()?.trim()
 
-        return newMovieSearchResponse(title, href, TvType.Movie) {
-            this.posterUrl = posterUrl
-            this.score     = Score.from10(rating)
-        }
+        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -85,7 +83,7 @@ class FullHDFilmizlesene : MainAPI() {
         val year            = document.selectFirst("div.dd a.category")?.text()?.split(" ")?.get(0)?.trim()?.toIntOrNull()
         val description     = document.selectFirst("div.ozet-ic > p")?.text()?.trim()
         val tags            = document.select("a[rel='category tag']").map { it.text() }
-        val rating          = document.selectFirst("div.puanx-puan")?.text()?.split(" ")?.last()
+        val rating          = document.selectFirst("div.puanx-puan")?.text()?.split(" ")?.last()?.toRatingInt()
         val duration        = document.selectFirst("span.sure")?.text()?.split(" ")?.get(0)?.trim()?.toIntOrNull()
         val trailer         = Regex("""embedUrl": "(.*)"""").find(document.html())?.groupValues?.get(1)
         val actors          = document.select("div.film-info ul li:nth-child(2) a > span").map {
@@ -107,7 +105,7 @@ class FullHDFilmizlesene : MainAPI() {
             this.year            = year
             this.plot            = description
             this.tags            = tags
-            this.score = Score.from10(rating)
+            this.rating          = rating
             this.duration        = duration
             this.recommendations = recommendations
             addActors(actors)

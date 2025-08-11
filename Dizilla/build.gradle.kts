@@ -1,7 +1,7 @@
-version = 51
+version = 37
 
 cloudstream {
-    authors     = listOf("keyiflerolsun","kraptor","kerimmkirac")
+    authors     = listOf("keyiflerolsun")
     language    = "tr"
     description = "Dizilla tüm yabancı dizileri ücretsiz olarak Türkçe Dublaj ve altyazılı seçenekleri ile 1080P kalite izleyebileceğiniz yeni nesil yabancı dizi izleme siteniz."
 

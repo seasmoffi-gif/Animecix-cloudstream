@@ -1,14 +1,13 @@
 package com.keyiflerolsun
 
-import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.plugins.Plugin
+import android.content.Context
 
 @CloudstreamPlugin
-class AnimeciXPlugin: BasePlugin() {
-    override fun load() {
+class AnimeciXPlugin: Plugin() {
+    override fun load(context: Context) {
         registerMainAPI(AnimeciX())
         registerExtractorAPI(TauVideo())
-        registerExtractorAPI(GoogleDriveExtractor())
-        registerExtractorAPI(SibNet())
     }
 }

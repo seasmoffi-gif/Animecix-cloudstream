@@ -3,14 +3,14 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
+import android.util.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import okhttp3.Interceptor
 
 class RecTV : MainAPI() {
-    override var mainUrl              = "https://m.prectv51.sbs"
+    override var mainUrl              = "https://m.prectv50.sbs"
     override var name                 = "RecTV"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -120,7 +120,7 @@ class RecTV : MainAPI() {
                 this.plot      = veri.description
                 this.year      = veri.year
                 this.tags      = veri.genres?.map { it.title }
-                this.score     = Score.from10("${veri.rating}")
+                this.rating    = "${veri.rating}".toRatingInt()
             }
         }
 
@@ -130,7 +130,7 @@ class RecTV : MainAPI() {
                 this.plot      = veri.description
                 this.year      = veri.year
                 this.tags      = veri.genres?.map { it.title }
-                this.score     = Score.from10("${veri.rating}")
+                this.rating    = "${veri.rating}".toRatingInt()
             }
         } else {
             newLiveStreamLoadResponse(veri.title, url, url) {
@@ -150,10 +150,10 @@ class RecTV : MainAPI() {
                     name    = this.name,
                     url     = data,
                     type    = INFER_TYPE
-                ) {
-                    headers = mapOf("Referer" to "https://twitter.com/") // "Referer" ayarı burada yapılabilir
-                    quality = getQualityFromName(Qualities.Unknown.value.toString())
-                }
+			) {
+                headers = mapOf("Referer" to "https://twitter.com/")
+                quality = Qualities.Unknown.value
+            }
             )
             return true
         }
@@ -189,3 +189,4 @@ class RecTV : MainAPI() {
         return interceptor
     }
 }
+

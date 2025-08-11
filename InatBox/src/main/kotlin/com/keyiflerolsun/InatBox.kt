@@ -1,10 +1,32 @@
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.*
+import android.util.Log
+import com.lagradost.cloudstream3.DubStatus
+import com.lagradost.cloudstream3.Episode
+import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LiveStreamLoadResponse
+import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SeasonData
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newAnimeLoadResponse
+import com.lagradost.cloudstream3.newEpisode
+import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newLiveSearchResponse
+import com.lagradost.cloudstream3.newLiveStreamLoadResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.Interceptor
-import okhttp3.ResponseBody
 import org.json.JSONArray
 import java.net.URI
 import javax.crypto.Cipher
@@ -15,11 +37,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONException
 import org.json.JSONObject
-import okio.BufferedSource
 
 class InatBox : MainAPI() {
-    private val contentUrl  = "https://dizibox.cfd"
-    //private val categoryUrl = "https://dizilab.cfd"
+    private val contentUrl  = "https://dizibox.rest"
 
     override var name                 = "InatBox"
     override val hasMainPage          = true
@@ -29,35 +49,32 @@ class InatBox : MainAPI() {
     override var sequentialMainPage   = false
 
     private val urlToSearchResponse = mutableMapOf<String, SearchResponse>()
-    private val aesKey = "ywevqtjrurkwtqgz" //Master secret and iv key (This is used for both secret key and iv. This is the embedded master key for loading categories like sport channels.)
+    private val aesKey = "ywevqtjrurkwtqgz" //Master secret and iv key
 
     override val mainPage = mainPageOf(
-        "https://boxyz.cfd/CDN/001_STR/boxyz.cfd/spor_v2.php"  to "Spor Kanalları",
-        "https://boxyz.cfd/CDN/001_STR/boxyz.cfd/derbiler.php" to "Derbiler",
-
-        "${contentUrl}/tv/list1.php"                           to "Kanallar Liste 1 - TR",
-        "${contentUrl}/tv/list2.php"                           to "Kanallar Liste 2 - GLB",
-        "${contentUrl}/tv/list3.php"                           to "Kanallar Liste 3 - TR",
-        "${contentUrl}/tv/sinema.php"                          to "Sinema Kanalları",
-        "${contentUrl}/tv/belgesel.php"                        to "Belgesel Kanalları",
-        "${contentUrl}/tv/ulusal.php"                          to "Ulusal Kanallar",
-        "${contentUrl}/tv/haber.php"                           to "Haber Kanalları",
-        "${contentUrl}/tv/eba.php"                             to "Eba Kanalları",
-        "${contentUrl}/tv/cocuk.php"                           to "Çocuk Kanalları",
-        "${contentUrl}/tv/dini.php"                            to "Dini Kanallar",
-        "${contentUrl}/ex/index.php"                           to "EXXEN",
-        "${contentUrl}/ga/index.php"                           to "Gain",
-        "${contentUrl}/nf/index.php"                           to "Netflix", // Burası şu an çalışmıyor.
-        "${contentUrl}/dsny/index.php"                         to "Disney+",
-        "${contentUrl}/amz/index.php"                          to "Amazon Prime",
-        "${contentUrl}/hb/index.php"                           to "HBO Max",
-        "${contentUrl}/tbi/index.php"                          to "Tabii",
-        "${contentUrl}/film/mubi.php"                          to "Mubi",
-        "${contentUrl}/ccc/index.php"                          to "TOD",
-        "${contentUrl}/yabanci-dizi/index.php"                 to "Yabancı Diziler",
-        "${contentUrl}/yerli-dizi/index.php"                   to "Yerli Diziler",
-        "${contentUrl}/film/yerli-filmler.php"                 to "Yerli Filmler",
-        "${contentUrl}/film/4k-film-exo.php"                   to "4K Film İzle",
+        "https://boxbc.sbs/CDN/001_STR/boxbc.sbs/spor_v2.php" to "Spor Kanalları",
+        "${contentUrl}/tv/cable.php"                          to "Kanallar Liste 1",
+        "${contentUrl}/tv/list2.php"                          to "Kanallar Liste 2",
+        "${contentUrl}/tv/sinema.php"                         to "Sinema Kanalları",
+        "${contentUrl}/tv/belgesel.php"                       to "Belgesel Kanalları",
+        "${contentUrl}/tv/ulusal.php"                         to "Ulusal Kanallar",
+        "${contentUrl}/tv/haber.php"                          to "Haber Kanalları",
+        "${contentUrl}/tv/cocuk.php"                          to "Çocuk Kanalları",
+        "${contentUrl}/tv/dini.php"                           to "Dini Kanallar",
+        "${contentUrl}/ex/index.php"                          to "EXXEN",
+        "${contentUrl}/ga/index.php"                          to "Gain",
+        "${contentUrl}/max/index.php"                         to "Max-BluTV",
+        "${contentUrl}/nf/index.php"                          to "Netflix",
+        "${contentUrl}/dsny/index.php"                        to "Disney+",
+        "${contentUrl}/amz/index.php"                         to "Amazon Prime",
+        "${contentUrl}/hb/index.php"                          to "HBO Max",
+        "${contentUrl}/tbi/index.php"                         to "Tabii",
+        "${contentUrl}/film/mubi.php"                         to "Mubi",
+        "${contentUrl}/ccc/index.php"                         to "TOD",
+        "${contentUrl}/yabanci-dizi/index.php"                to "Yabancı Diziler",
+        "${contentUrl}/yerli-dizi/index.php"                  to "Yerli Diziler",
+        "${contentUrl}/film/yerli-filmler.php"                to "Yerli Filmler",
+        "${contentUrl}/film/4k-film-exo.php"                  to "4K Film İzle | Exo"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -194,7 +211,7 @@ class InatBox : MainAPI() {
                 val episodeArray = try {
                     JSONArray(episodeResponse)
                 } catch (e: Exception) {
-                    Log.e("InatBox", "Failed to parse episode JSON for season: $seasonName  $e")
+                    Log.e("InatBox", "Failed to parse episode JSON for season: $seasonName", e)
                     continue
                 }
 
@@ -344,7 +361,8 @@ class InatBox : MainAPI() {
             val reg = chContent.chReg
             val type = chContent.chType
 
-            val jsonResponse = runCatching { makeInatRequest(url) }.getOrNull() ?: getJsonFromEncryptedInatResponse(app.get(url).text) ?: return
+            val jsonResponse = runCatching { makeInatRequest(url) }.getOrNull()
+    ?: getJsonFromEncryptedInatResponse(app.get(url).body?.string() ?: "") ?: return
             val firstItem = JSONObject(jsonResponse)
             firstItem.put("chHeaders", headers)
             firstItem.put("chReg", reg)
@@ -378,10 +396,22 @@ class InatBox : MainAPI() {
         }
 
         val extractorFound =
-            loadExtractor(sourceUrl, headers["Referer"], subtitleCallback){
-                callback.invoke(
-                    ExtractorLink(source = it.source,name = contentToProcess.chName, url = it.url, referer = it.referer, quality = it.quality, headers = it.headers, type = it.type)
-                )
+            if (sourceUrl.contains("dzen.ru")) {
+                 loadExtractor(sourceUrl,subtitleCallback,callback)
+             } else {
+                 loadExtractor(sourceUrl, headers["Referer"], subtitleCallback) {
+                     callback.invoke(
+                         ExtractorLink(
+                             source = it.source,
+                             name = contentToProcess.chName,
+                             url = it.url,
+                             referer = it.referer,
+                             quality = it.quality,
+                             headers = it.headers,
+                             type = it.type
+                         )
+                     )
+                 }
             }
 
         //When no extractor found, try to load as generic
@@ -405,7 +435,7 @@ class InatBox : MainAPI() {
         val hostName = try {
             URI(url).host ?: throw IllegalArgumentException("Invalid URL: $url")
         } catch (e: Exception) {
-            Log.e("InatBox", "Failed to extract hostname from URL: $url $e")
+            Log.e("InatBox", "Failed to extract hostname from URL: $url", e)
             return null
         }
 
@@ -434,17 +464,9 @@ class InatBox : MainAPI() {
         )
 
         if (response.isSuccessful) {
-            // val encryptedResponse = response.text
+            val encryptedResponse = response.body?.string() ?: ""
             // Log.d("InatBox", "Encrypted response: ${encryptedResponse}")
-            // Akışı başlatır
-            val source = response.body?.source()
-            val encryptedResponse = source?.readByteArray()  // Akışı parçalara ayırarak okur
-
-            // Eğer byteArray varsa, onu String'e dönüştür
-            val encryptedResponseString = encryptedResponse?.let { String(it, Charsets.UTF_8) }
-
-            // Eğer response body boş değilse, şifresiz yanıtı al
-            return encryptedResponseString?.let { getJsonFromEncryptedInatResponse(it) }
+            return getJsonFromEncryptedInatResponse(encryptedResponse)
         } else {
             Log.e("InatBox", "Request failed")
             return null

@@ -2,13 +2,19 @@
 
 package com.keyiflerolsun
 
-import android.util.Base64
-import com.lagradost.api.Log
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
-import com.lagradost.cloudstream3.utils.*
-import org.jsoup.Jsoup
+import android.util.Log
 import org.jsoup.nodes.Element
+import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
+import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+import com.lagradost.cloudstream3.network.CloudflareKiller
+import com.lagradost.cloudstream3.utils.StringUtils.decodeUri
+import okhttp3.Interceptor
+import okhttp3.Response
+import android.util.Base64
+import org.jsoup.Jsoup
+import java.util.regex.Pattern
 
 class KultFilmler : MainAPI() {
     override var mainUrl              = "https://kultfilmler.net"
@@ -17,58 +23,78 @@ class KultFilmler : MainAPI() {
     override var lang                 = "tr"
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Movie, TvType.TvSeries)
+	
+	    // ! CloudFlare bypass
+    override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/library/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
+    override var sequentialMainPageDelay       = 150L  // ? 0.15 saniye
+    override var sequentialMainPageScrollDelay = 150L  // ? 0.15 saniye
+
+    // ! CloudFlare v2
+    private val cloudflareKiller by lazy { CloudflareKiller() }
+    private val interceptor      by lazy { CloudflareInterceptor(cloudflareKiller) }
+
+    class CloudflareInterceptor(private val cloudflareKiller: CloudflareKiller): Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val request  = chain.request()
+            val response = chain.proceed(request)
+            val doc      = Jsoup.parse(response.peekBody(1024 * 1024).string())
+
+            if (doc.text().contains("Just a moment...")) {
+                return cloudflareKiller.intercept(chain)
+            }
+
+            return response
+        }
+    }
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/page/"                                      to "Son Filmler",
-        "${mainUrl}/category/aile-filmleri-izle/page/"		    to "Aile",
-        "${mainUrl}/category/aksiyon-filmleri-izle/page/"	    to "Aksiyon",
-        "${mainUrl}/category/animasyon-filmleri-izle/page/"	    to "Animasyon",
-        "${mainUrl}/category/belgesel-izle/page/"			    to "Belgesel",
-        "${mainUrl}/category/bilim-kurgu-filmleri-izle/page/"   to "Bilim Kurgu",
-        "${mainUrl}/category/biyografi-filmleri-izle/page/"	    to "Biyografi",
-        "${mainUrl}/category/dram-filmleri-izle/page/"		    to "Dram",
-        "${mainUrl}/category/fantastik-filmleri-izle/page/"	    to "Fantastik",
-        "${mainUrl}/category/gerilim-filmleri-izle/page/"	    to "Gerilim",
-        "${mainUrl}/category/gizem-filmleri-izle/page/"		    to "Gizem",
-        "${mainUrl}/category/kara-filmleri-izle/page/"		    to "Kara",
-        "${mainUrl}/category/kisa-film-izle/page/"			    to "Kısa Metrajlı",
-        "${mainUrl}/category/komedi-filmleri-izle/page/"		to "Komedi",
-        "${mainUrl}/category/korku-filmleri-izle/page/"		    to "Korku",
-        "${mainUrl}/category/macera-filmleri-izle/page/"		to "Macera",
-        "${mainUrl}/category/muzik-filmleri-izle/page/"		    to "Müzik",
-        "${mainUrl}/category/polisiye-filmleri-izle/page/"	    to "Polisiye",
-        "${mainUrl}/category/politik-filmleri-izle/page/"	    to "Politik",
-        "${mainUrl}/category/romantik-filmleri-izle/page/"	    to "Romantik",
-        "${mainUrl}/category/savas-filmleri-izle/page/"		    to "Savaş",
-        "${mainUrl}/category/spor-filmleri-izle/page/"		    to "Spor",
-        "${mainUrl}/category/suc-filmleri-izle/page/"		    to "Suç",
-        "${mainUrl}/category/tarih-filmleri-izle/page/"		    to "Tarih",
-        "${mainUrl}/category/yerli-filmleri-izle/page/"		    to "Yerli"
+        "${mainUrl}/category/aile-filmleri-izle"		    to "Aile",
+        "${mainUrl}/category/aksiyon-filmleri-izle"	        to "Aksiyon",
+        "${mainUrl}/category/animasyon-filmleri-izle"	    to "Animasyon",
+        "${mainUrl}/category/belgesel-izle"			        to "Belgesel",
+        "${mainUrl}/category/bilim-kurgu-filmleri-izle"     to "Bilim Kurgu",
+        "${mainUrl}/category/biyografi-filmleri-izle"	    to "Biyografi",
+        "${mainUrl}/category/dram-filmleri-izle"		    to "Dram",
+        "${mainUrl}/category/fantastik-filmleri-izle"	    to "Fantastik",
+        "${mainUrl}/category/gerilim-filmleri-izle"	        to "Gerilim",
+        "${mainUrl}/category/gizem-filmleri-izle"		    to "Gizem",
+        "${mainUrl}/category/kara-filmleri-izle"		    to "Kara",
+        "${mainUrl}/category/kisa-film-izle"			    to "Kısa Metrajlı",
+        "${mainUrl}/category/komedi-filmleri-izle"		    to "Komedi",
+        "${mainUrl}/category/korku-filmleri-izle"		    to "Korku",
+        "${mainUrl}/category/macera-filmleri-izle"		    to "Macera",
+        "${mainUrl}/category/muzik-filmleri-izle"		    to "Müzik",
+        "${mainUrl}/category/polisiye-filmleri-izle"	    to "Polisiye",
+        "${mainUrl}/category/politik-filmleri-izle"	        to "Politik",
+        "${mainUrl}/category/romantik-filmleri-izle"	    to "Romantik",
+        "${mainUrl}/category/savas-filmleri-izle"		    to "Savaş",
+        "${mainUrl}/category/spor-filmleri-izle"		    to "Spor",
+        "${mainUrl}/category/suc-filmleri-izle"		        to "Suç",
+        "${mainUrl}/category/tarih-filmleri-izle"		    to "Tarih",
+        "${mainUrl}/category/yerli-filmleri-izle"		    to "Yerli"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}${page}").document
-        val home     = document.select("div.movie-box").mapNotNull { it.toSearchResult() }
+        val document = app.get(request.data).document
+        val movieBoxes = document.select("div.col-md-12 div.movie-box")
+        val home = movieBoxes.mapNotNull { 
+        it.toSearchResult() 
+    }
 
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title     = this.selectFirst("div.name a")?.text() ?: return null
-        val href      = fixUrlNull(this.selectFirst("div.name a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("div.img img")?.attr("src"))
-        val puan      = this.selectFirst("span.imdb")?.text()?.trim()
+        val title = this.selectFirst("div.img img")?.attr("alt")?.takeIf { it.isNotEmpty() } ?: return null
+        Log.d("toSearchResult", "Title: $title")
+
+        val href = this.selectFirst("a")?.attr("href")?.let { fixUrlNull(it) } ?: return null
+        val posterUrl = this.selectFirst("div.img img")?.attr("src")?.let { fixUrlNull(it) }
 
         return if (href.contains("/dizi/")) {
-            newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-                this.posterUrl = posterUrl
-                this.score     = Score.from10(puan)
-            }
+            newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
         } else {
-            newMovieSearchResponse(title, href, TvType.Movie) {
-                this.posterUrl = posterUrl
-                this.score     = Score.from10(puan)
-            }
+            newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
         }
     }
 
@@ -83,15 +109,14 @@ class KultFilmler : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
 
-        val title           = document.selectFirst("div.film h1")?.text()?.trim() ?: document.selectFirst("h1.film")?.text()?.trim() ?: return null
+        val title           = document.selectFirst("div.film-bilgileri img")?.attr("alt")?.trim() ?: document.selectFirst("[property='og:title']")?.attr("content")?.trim() ?: return null
         val poster          = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
         val description     = document.selectFirst("div.description")?.text()?.trim()
         var tags            = document.select("ul.post-categories a").map { it.text() }
-        val rating          = document.selectFirst("div.imdb-count")?.text()?.trim()?.split(" ")?.first()
+        val rating          = document.selectFirst("div.imdb-count")?.text()?.trim()?.split(" ")?.first()?.toRatingInt()
         val year            = Regex("""(\d+)""").find(document.selectFirst("li.release")?.text()?.trim() ?: "")?.groupValues?.get(1)?.toIntOrNull()
         val duration        = Regex("""(\d+)""").find(document.selectFirst("li.time")?.text()?.trim() ?: "")?.groupValues?.get(1)?.toIntOrNull()
-        val recommendations = document.select("div.movie-box").mapNotNull { it.toSearchResult() }
-        val actors          = document.select("[href*='oyuncular']").map {
+        val actors          = document.select("div.actors a").map {
             Actor(it.text())
         }
 
@@ -118,9 +143,8 @@ class KultFilmler : MainAPI() {
                 this.year            = year
                 this.plot            = description
                 this.tags            = tags
-                this.score = Score.from10(rating)
+                this.rating          = rating
                 this.duration        = duration
-                this.recommendations = recommendations
                 addActors(actors)
             }
         }
@@ -130,9 +154,8 @@ class KultFilmler : MainAPI() {
             this.year            = year
             this.plot            = description
             this.tags            = tags
-            this.score = Score.from10(rating)
+            this.rating          = rating
             this.duration        = duration
-            this.recommendations = recommendations
             addActors(actors)
         }
     }
@@ -151,6 +174,41 @@ class KultFilmler : MainAPI() {
 
         return fixUrlNull(iframe.selectFirst("iframe")?.attr("src")) ?: ""
     }
+private fun extractSubtitleUrl(sourceCode: String): String? {
+    Log.d("KLT", "Source code length: ${sourceCode.length}")
+    Log.d("KLT", "Source code contains 'playerjsSubtitle': ${sourceCode.contains("playerjsSubtitle")}")
+    Log.d("KLT", "Source code contains '.srt': ${sourceCode.contains(".srt")}")
+    
+    // Basit pattern ile test
+    val pattern = Pattern.compile("(https?://[^\"\\s]+\\.srt)")
+    val matcher = pattern.matcher(sourceCode)
+    
+    if (matcher.find()) {
+        val subtitleUrl = matcher.group(1)
+        Log.d("KLT", "Found subtitle URL: $subtitleUrl")
+        return subtitleUrl
+    }
+    
+    // Bulunamazsa kaynak kodun bir kısmını logla
+    Log.d("KLT", "First 500 chars of source: ${sourceCode.take(500)}")
+    Log.d("KLT", "No subtitle URL found in source code")
+    return null
+}
+       private suspend fun extractSubtitleFromIframe(iframeUrl: String): String? {
+        if (iframeUrl.isEmpty()) return null
+        try {
+            val headers = mapOf(
+                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+                "Referer" to mainUrl
+            )
+            val iframeResponse = app.get(iframeUrl, headers=headers)
+            val iframeSource = iframeResponse.text
+		Log.d("KLT", "iframeSource » $iframeSource")
+            return extractSubtitleUrl(iframeSource)
+        } catch (e: Exception) {
+            return null
+        }
+    }
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         Log.d("KLT", "data » $data")
@@ -160,8 +218,8 @@ class KultFilmler : MainAPI() {
         val mainFrame = getIframe(document.html())
         iframes.add(mainFrame)
 
-        document.select("div.parts-middle").forEach {
-            val alternatif = it.selectFirst("a")?.attr("href")
+        document.select("div.container#player").forEach {
+            val alternatif = it.selectFirst("iframe")?.attr("src")
             if (alternatif != null) {
                 val alternatifDocument = app.get(alternatif).document
                 val alternatifFrame    = getIframe(alternatifDocument.html())
@@ -172,7 +230,7 @@ class KultFilmler : MainAPI() {
         for (iframe in iframes) {
             Log.d("KLT", "iframe » $iframe")
             if (iframe.contains("vidmoly")) {
-                var headers  = mapOf(
+                val headers  = mapOf(
                     "User-Agent"     to "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36",
                     "Sec-Fetch-Dest" to "iframe"
                 )
@@ -187,12 +245,21 @@ class KultFilmler : MainAPI() {
                         name    = "VidMoly",
                         url     = m3uLink,
                         type    = INFER_TYPE
-                    ) {
-                        headers = mapOf("Referer" to "https://vidmoly.to/") // "Referer" ayarı burada yapılabilir
-                        quality = getQualityFromName(Qualities.Unknown.value.toString())
-                    }
+            ) {
+                quality = Qualities.Unknown.value
+            }
                 )
             } else {
+            // Extract subtitle for other iframes
+            val subtitleUrl = extractSubtitleFromIframe(data)
+            if (subtitleUrl != null) {
+                subtitleCallback.invoke(
+                    SubtitleFile(
+                        lang = "Türkçe",
+                        url = subtitleUrl
+                    )
+                )
+            }
                 loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
             }
         }

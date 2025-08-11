@@ -1,15 +1,16 @@
 package com.keyiflerolsun
 
-import com.lagradost.cloudstream3.plugins.BasePlugin
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.plugins.Plugin
+import android.content.Context
 
 @CloudstreamPlugin
-class InatBoxPlugin: BasePlugin() {
-    override fun load() {
+class InatBoxPlugin: Plugin() {
+    override fun load(context: Context) {
         registerMainAPI(InatBox())
         registerExtractorAPI(DiskYandexComTr())
         registerExtractorAPI(Vk())
-        registerExtractorAPI(Dzen())
+        registerExtractorAPI(DzenRu())
         registerExtractorAPI(CDNJWPlayer())
     }
 }

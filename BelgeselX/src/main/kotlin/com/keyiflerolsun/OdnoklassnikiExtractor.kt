@@ -2,12 +2,10 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.lagradost.cloudstream3.ErrorLoadingException
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.app
+import android.util.Log
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.fasterxml.jackson.annotation.JsonProperty
 
 open class Odnoklassniki : ExtractorApi() {
     override val name            = "Odnoklassniki"
@@ -42,16 +40,20 @@ open class Odnoklassniki : ExtractorApi() {
                 .replace("ULTRA",  "4k")
 
             callback.invoke(
-                newExtractorLink(
-                    source = "${this.name} $quality",
-                    name = "${this.name} $quality",
-                    url = videoUrl,
-                    type = INFER_TYPE
-                ) {
-                    headers = userAgent
-                    this.quality = getQualityFromName(quality) // `Int` olarak ayarlandı
-                }
-            )
+              newExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = videoUrl,
+                type = INFER_TYPE
+            ) {
+                headers = userAgent
+                this.quality = getQualityFromName(quality) // `Int` olarak ayarlandı
+              /**
+              * varsayılan olarak false olması gerekiyor şimdilik böyle kalsın ve ellemeyelim 
+              * isM3u8 = false
+              */
+        }
+    )
         }
     }
 

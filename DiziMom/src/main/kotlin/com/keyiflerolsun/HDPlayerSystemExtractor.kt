@@ -2,12 +2,10 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.lagradost.cloudstream3.ErrorLoadingException
-import com.lagradost.cloudstream3.SubtitleFile
-import com.lagradost.cloudstream3.app
+import android.util.Log
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.fasterxml.jackson.annotation.JsonProperty
 
 open class HDPlayerSystem : ExtractorApi() {
     override val name            = "HDPlayerSystem"
@@ -45,10 +43,12 @@ open class HDPlayerSystem : ExtractorApi() {
                 source = this.name,
                 name = this.name,
                 url = m3uLink ?: throw ErrorLoadingException("m3u link not found"),
-                type = ExtractorLinkType.M3U8 // isM3u8 artık bu şekilde belirtiliyor
+                type = ExtractorLinkType.M3U8 // Tür olarak M3U8'yi belirtiyoruz
             ) {
-                headers = mapOf("Referer" to url) // Eski "referer" artık headers içinde
-                quality = Qualities.Unknown.value // Kalite ayarlandı
+                quality = Qualities.Unknown.value // Varsayılan kalite ayarlandı
+                /* referer = url // bunun yerine headers kodunu ekledim */
+                headers = mapOf("Referer" to url) // Referer burada başlıklar üzerinden ayarlandı
+                /* site açılmıyor şu anda o yüzden hata vermemesi için bunu kapatıyorum isM3u8 = true */
             }
         )
     }

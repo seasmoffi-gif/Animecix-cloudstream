@@ -1,4 +1,4 @@
-version = 10
+version = 6
 
 cloudstream {
     authors     = listOf("keyiflerolsun")
@@ -14,5 +14,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("AsianDrama")
-    iconUrl = "https://www.google.com/s2/favicons?domain=www.koreanturk.com&sz=%size%"
+    iconUrl = "https://www.google.com/s2/favicons?domain=koreanturk.com&sz=%size%"
 }

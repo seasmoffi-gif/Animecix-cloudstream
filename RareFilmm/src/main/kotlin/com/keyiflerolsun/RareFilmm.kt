@@ -2,11 +2,10 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
+import android.util.Log
 import org.jsoup.nodes.Element
+import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
 
 class RareFilmm : MainAPI() {
     override var mainUrl              = "https://rarefilmm.com"
@@ -69,13 +68,13 @@ class RareFilmm : MainAPI() {
         val poster      = fixUrlNull(document.selectFirst("div.featured-image")?.attr("style")?.substringAfter("url(")?.substringBefore(")"))
         val description = document.selectFirst("div.entry-content p")?.text()?.trim()
         val tags        = document.select("div.entry-tags a").map { it.text() }
-        val rating      = document.selectFirst("span.js-rmp-avg-rating")?.text()?.trim()
+        val rating      = document.selectFirst("span.js-rmp-avg-rating")?.text()?.trim()?.toRatingInt()
 
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl = poster
             this.plot      = description
             this.tags      = tags
-            this.score = Score.from10(rating)
+            this.rating    = rating
         }
     }
 

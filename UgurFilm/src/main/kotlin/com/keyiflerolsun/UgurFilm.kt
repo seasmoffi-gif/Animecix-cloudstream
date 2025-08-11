@@ -2,16 +2,14 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
-import com.lagradost.cloudstream3.utils.AppUtils
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
+import android.util.Log
 import org.jsoup.nodes.Element
+import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 
 class UgurFilm : MainAPI() {
-    override var mainUrl              = "https://ugurfilm10.com"
+    override var mainUrl              = "https://ugurfilm9.com"
     override var name                 = "UgurFilm"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -55,41 +53,37 @@ class UgurFilm : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-    val document = app.get(url).document
-    
-    val title = document.selectFirst("div.bilgi h2")?.text()?.trim() ?: return null
-    val poster = fixUrlNull(document.selectFirst("div.resim img")?.attr("src"))
-    val year = document.selectFirst("a[href*='/yil/']")?.text()?.trim()?.toIntOrNull()
-    val description = document.selectFirst("div.slayt-aciklama")?.text()?.trim()
-    val tags = document.select("p.tur a[href*='/category/']").map { it.text() }
-    val rating = document.selectFirst("span.puan")?.text()?.replace("IMDb : ", "")?.trim()
-    val duration = document.selectXpath("//span[contains(text(), 'Süre:')]//following-sibling::b").text()
-        .replace("Dakika", "").trim().toIntOrNull()
-    val actors = document.select("li.oyuncu-k").map {
-        Actor(
-            it.selectFirst("span.isim")?.text() ?: it.selectFirst("a")?.attr("title") ?: "",
-            fixUrlNull(it.selectFirst("img")?.attr("src"))
-        )
+        val document = app.get(url).document
+
+        val title       = document.selectFirst("div.bilgi h2")?.text()?.trim() ?: return null
+        val poster      = fixUrlNull(document.selectFirst("div.resim img")?.attr("src"))
+        val year        = document.selectFirst("a[href*='/yil/']")?.text()?.trim()?.toIntOrNull()
+        val description = document.selectFirst("div.slayt-aciklama")?.text()?.trim()
+        val tags        = document.select("p.tur a[href*='/category/']").map { it.text() }
+        val rating      = document.selectFirst("span.puan")?.text()?.split(" ")?.last()?.toRatingInt()
+        val duration    = document.selectXpath("//span[contains(text(), 'Süre:')]//following-sibling::b").text().split(" ")[0].trim().toIntOrNull()
+        val actors      = document.select("li.oyuncu-k").map {
+            Actor(it.selectFirst("span")!!.text(), it.selectFirst("img")?.attr("src"))
+        }
+
+        return newMovieLoadResponse(title, url, TvType.Movie, url) {
+            this.posterUrl = poster
+            this.year      = year
+            this.plot      = description
+            this.tags      = tags
+            this.rating    = rating
+            this.duration  = duration
+            addActors(actors)
+        }
     }
-    
-    return newMovieLoadResponse(title, url, TvType.Movie, url) {
-        this.posterUrl = poster
-        this.year = year
-        this.plot = description
-        this.tags = tags
-        this.score = Score.from10(rating)
-        this.duration = duration
-        addActors(actors)
-    }
-}
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         Log.d("UGF", "data » $data")
-        val mainDocument = app.get(data).document
+        val mainDocument = app.get(data, referer=data).document
 
         mainDocument.select("li.parttab a").forEach {
             val subUrl  = fixUrlNull(it.attr("href")) ?: return false
-            val document = app.get(subUrl).document
+            val document = app.get(subUrl, referer=data).document
 
             val iframe   = fixUrlNull(document.selectFirst("div#vast iframe")?.attr("src")) ?: return@forEach
             Log.d("UGF", "iframe » $iframe")

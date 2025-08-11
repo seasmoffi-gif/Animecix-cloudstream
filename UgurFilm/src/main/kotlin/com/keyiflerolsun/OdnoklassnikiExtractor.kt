@@ -2,7 +2,7 @@
 
 package com.keyiflerolsun
 
-import com.lagradost.api.Log
+import android.util.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -44,11 +44,10 @@ open class Odnoklassniki : ExtractorApi() {
                     source  = this.name,
                     name    = this.name,
                     url     = videoUrl,
-                    type    = INFER_TYPE
-                ) {
-                    headers = mapOf("Referer" to "userAgent")
-                    this.quality = getQualityFromName(quality)
-                }
+			) {
+                headers = mapOf("Referer" to "userAgent")
+                this.quality = getQualityFromName(quality)
+            }
             )
         }
     }
