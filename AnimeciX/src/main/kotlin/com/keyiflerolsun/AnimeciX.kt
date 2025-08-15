@@ -163,7 +163,7 @@ override suspend fun loadLinks(
         if (redirectedUrl.contains("tau-video")) {
             loadExtractor(redirectedUrl, "$mainUrl/", subtitleCallback, callback)
         } else {
-            loadExtractor(iframeLink, "$mainUrl/", subtitleCallback, callback)
+            loadExtractor(redirectedUrl, "$mainUrl/", subtitleCallback, callback)
             Log.d("ACX", "Redirect failed or unexpected URL: $redirectedUrl")
         }
     } else {
