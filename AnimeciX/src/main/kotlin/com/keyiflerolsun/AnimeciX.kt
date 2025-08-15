@@ -99,7 +99,7 @@ class AnimeciX : MainAPI() {
             for (sezon in response.title.seasons) {
                 val sezonResponse = app.get("${mainUrl}/secure/related-videos?episode=1&season=${sezon.number}&videoId=0&titleId=${titleId}").parsedSafe<TitleVideos>() ?: return null
                 for (video in sezonResponse.videos) {
-                    episodes.add(newEpisode(video.url) {
+                    episodes.add(newEpisode("${mainUrl}/secure/episode-videos-points?episode=1&season=${sezon.number}&titleId=${titleId}") {
                         this.name = "${video.seasonNum}. Sezon ${video.episodeNum}. Bölüm"
                         this.season = video.seasonNum
                         this.episode = video.episodeNum
@@ -139,35 +139,41 @@ override suspend fun loadLinks(
     callback: (ExtractorLink) -> Unit
 ): Boolean {
     Log.d("ACX", "data » $data")
-    val pageUrl = "$mainUrl/$data"
 
-    // Sayfayı çek
-    val response = app.get(pageUrl, referer = "$mainUrl/")
-    var iframeLink = response.url
-    Log.d("ACX", "iframeLink » $iframeLink")
 
-    // Eğer iframeLink içinde çift URL varsa düzelt
-    val doubleUrlRegex = Regex("https://animecix.tv/(https://animecix.tv/secure/[^\\s]+)")
-    val match = doubleUrlRegex.find(iframeLink)
-    if (match != null) {
-        iframeLink = match.groupValues[1]
-        Log.d("ACX", "Corrected iframeLink » $iframeLink")
+    val apiUrl = "$data"
+
+    // API isteği
+    val response = app.get(
+        apiUrl, referer = "$mainUrl/"
+    )
+
+    val json = try {
+        response.text
+    } catch (e: Exception) {
+        Log.e("ACX", "API yanıtı okunamadı: ${e.message}")
+        return false
     }
 
-    // Eğer dizi (best-video) ise yönlendirmeyi takip et
-    if (iframeLink.contains("/secure/best-video")) {
-        val redirectResponse = app.get(iframeLink, referer = "$mainUrl/")
-        val redirectedUrl = redirectResponse.url
-        Log.d("ACX", "Redirected final URL » $redirectedUrl")
+    try {
+        val root = JSONObject(json)
+        val videos = root.optJSONArray("videos") ?: JSONArray()
 
-        if (redirectedUrl.contains("tau-video")) {
-            loadExtractor(redirectedUrl, "$mainUrl/", subtitleCallback, callback)
-        } else {
-            loadExtractor(redirectedUrl, "$mainUrl/", subtitleCallback, callback)
-            Log.d("ACX", "Redirect failed or unexpected URL: $redirectedUrl")
+        for (i in 0 until videos.length()) {
+            val item = videos.optJSONObject(i) ?: continue
+            val url = item.optString("url", "")
+            if (url.isNotBlank()) {
+                Log.d("ACX", "Video URL bulundu: $url")
+                try {
+                    loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
+                } catch (e: Exception) {
+                    Log.e("ACX", "Extractor yüklenemedi: ${e.message}")
+                }
+            }
         }
-    } else {
-        loadExtractor(iframeLink, "$mainUrl/", subtitleCallback, callback)
+    } catch (e: Exception) {
+        Log.e("ACX", "JSON parse hatası: ${e.message}")
+        return false
     }
 
     return true
