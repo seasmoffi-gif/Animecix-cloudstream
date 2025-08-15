@@ -148,32 +148,28 @@ override suspend fun loadLinks(
         apiUrl, referer = "$mainUrl/"
     )
 
-    val json = try {
-        response.text
-    } catch (e: Exception) {
-        Log.e("ACX", "API yanıtı okunamadı: ${e.message}")
-        return false
-    }
 
-    try {
-        val root = JSONObject(json)
-        val videos = root.optJSONArray("videos") ?: JSONArray()
 
-        for (i in 0 until videos.length()) {
-            val item = videos.optJSONObject(i) ?: continue
-            val url = item.optString("url", "")
-            if (url.isNotBlank()) {
-                Log.d("ACX", "Video URL bulundu: $url")
-                try {
-                    loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
-                } catch (e: Exception) {
-                    Log.e("ACX", "Extractor yüklenemedi: ${e.message}")
-                }
-            }
-        }
+    // Cloudstream'in kendi JSON parse fonksiyonu
+    val root = try {
+        parseJson<Map<String, Any?>>(response.text)
     } catch (e: Exception) {
         Log.e("ACX", "JSON parse hatası: ${e.message}")
         return false
+    }
+
+    val videos = root["videos"] as? List<Map<String, Any?>> ?: emptyList()
+
+    for (video in videos) {
+        val url = video["url"] as? String ?: continue
+        if (url.isNotBlank()) {
+            Log.d("ACX", "Video URL bulundu: $url")
+            try {
+                loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
+            } catch (e: Exception) {
+                Log.e("ACX", "Extractor yüklenemedi: ${e.message}")
+            }
+        }
     }
 
     return true
