@@ -1,25 +1,67 @@
-# 📺 cs-Kekik
+# 🎬 Animecix Cloudstream Eklentisi
 
-Arşive alınmış projenin canlıya çekilmiş hali
+[![Cloudstream](https://img.shields.io/badge/Cloudstream-Plugin-blue)](https://github.com/recloudstream/cloudstream)
+[![Version](https://img.shields.io/github/v/release/seasmoffi-gif/Animecix-cloudstream)](https://github.com/seasmoffi-gif/Animecix-cloudstream/releases)
+[![License](https://img.shields.io/github/license/seasmoffi-gif/Animecix-cloudstream)](LICENSE)
 
-## 💾 Kurulum
-
-1. **[cloudstream/pre-release](https://github.com/recloudstream/cloudstream/releases/tag/pre-release)** _Adresinden güncel APK dosyasını indirip kurun._
-2. **Uygulamanın yüklü olduğu cihazda** _[depoyu otomatik yüklemek için tıklayın](https://keyiflerolsun.me/http-protocol-redirector?r=cloudstreamrepo://raw.githubusercontent.com/ramazansancar/keyiflerolsun_Kekik-cloudstream/master/repo.json)_
-  - **veya**
-  - `Depo ekle` _butonuyla **manuel** ekleme yapmak isteyen arkadaşlar için_ `kekikdevam` _**kısa kod**u mevcuttur._ `Depo ismi` _kısmını boş bırakarak_ `Depo URL'si` _kısmına_ `kekikdevam` yazarak `Depo ekle` _demeniz yeterli.._
-
-## 💡 Faydalı Linkler
-
-- [Tanıtım Videosu](https://www.youtube.com/watch?v=CiYK7zrP00c)
-- [Diğer Eklentiler](https://rentry.org/cs3-repos)
-- [Eklenti Listesi Wiki](https://cloudstream.miraheze.org/wiki/List_of_extensions)
-- [Open Subtitles Desteği (Torrent veya Yabancı Eklentiler İçin)](https://recloudstream.github.io/csdocs/integrations/opensubtitles/)
-- [anicompat (Fazlaca Anime Eklenti Desteği)](https://youtu.be/0Gl48lL7e9Y)
-- [Eklenti Kodlama](https://www.youtube.com/watch?v=gWECdddixyA)
+> **Cloudstream** için **Animecix** kaynaklı anime izleme eklentisi.  
+> Türkçe anime içeriklerini hızlı, reklamsız ve doğrudan Cloudstream uygulaması üzerinden izleyin.
 
 ---
 
-<a href="https://github.com/ramazansancar/keyiflerolsun_Kekik-cloudstream/graphs/contributors?selectedMetric=additions" target="_blank">
-  <img src="https://contrib.rocks/image?repo=ramazansancar/keyiflerolsun_Kekik-cloudstream" />
-</a>
+## ✨ Özellikler
+
+- 📡 **Animecix** sitesinden doğrudan içerik çekme
+- 🔍 **Hızlı arama** ve filtreleme desteği
+- 🆕 Yeni bölümler otomatik olarak listelenir
+- 🎯 Türkçe altyazı veya dublaj desteği
+- ⚡ Hafif ve hızlı çalışma
+
+---
+
+## 📥 Kurulum
+
+1. **Cloudstream** uygulamasını yükleyin:  
+   📌 [Cloudstream GitHub](https://github.com/recloudstream/cloudstream)
+
+2. Uygulamada:
+   - **Ayarlar → Eklenti Depoları → Depo Ekle**
+   - Aşağıdaki URL’yi yapıştırın:
+
+   ```
+   https://raw.githubusercontent.com/seasmoffi-gif/Animecix-cloudstream/refs/heads/master/repo.json
+   ```
+
+3. Kaynağı ekledikten sonra **Animecix** eklentisi listede gözükecektir.  
+   Yükle tuşuna basarak etkinleştirin.
+
+---
+
+## 🖥 Kullanım
+
+- Uygulamada **Kaynaklar** kısmına gidin.
+- **Animecix**’i seçin.
+- İstediğiniz animeyi arayın veya kategorilerden seçin.
+- Oynat butonuna basın ve keyfini çıkarın! 🍿
+
+
+---
+
+## ⚠️ Yasal Uyarı
+
+Bu proje, **yalnızca eğitim ve kişisel kullanım** amaçlıdır.  
+Eklenti, herhangi bir içeriği **barındırmaz**; yalnızca Animecix sitesinden gelen verileri gösterir.
+
+---
+
+## 🤝 Katkıda Bulunma
+
+1. Bu depoyu forklayın
+2. Değişikliklerinizi yapın
+3. Pull Request açın
+
+---
+
+## 📜 Lisans
+
+Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.
