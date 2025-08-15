@@ -1,8 +1,8 @@
 {
-  "name": "Turkish Providers Repository | @KekikAkademi",
-  "description": "Türkçe içerikli eklenti havuzu",
+  "name": "Animecix Full | @KekikAkademi And @yusiqo",
+  "description": "Anime izlemek için en iyi depo",
   "manifestVersion": 1,
   "pluginLists": [
-    "https://raw.githubusercontent.com/maarrem/cs-Kekik/builds/plugins.json"
+    "https://raw.githubusercontent.com/seasmoffi-gif/Animecix-cloudstream/builds/plugins.json"
   ]
 }
