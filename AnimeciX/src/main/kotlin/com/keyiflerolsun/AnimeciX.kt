@@ -140,23 +140,15 @@ override suspend fun loadLinks(
 ): Boolean {
     Log.d("ACX", "data » $data")
 
+    // data burada direkt API URL'si (örnek: https://animecix.tv/secure/episode-videos-points?titleId=11006&episode=1&season=1)
 
-    val apiUrl = "$data"
-
-    // API isteği
     val response = app.get(
-        apiUrl, referer = "$mainUrl/"
+        data,
+        referer = "$mainUrl/"
     )
 
-
-
-    // Cloudstream'in kendi JSON parse fonksiyonu
-    val root = try {
-        parseJson<Map<String, Any?>>(response.text)
-    } catch (e: Exception) {
-        Log.e("ACX", "JSON parse hatası: ${e.message}")
-        return false
-    }
+    // JSON'u güvenli şekilde parse et
+    val root = response.parsedSafe<Map<String, Any?>>() ?: return false
 
     val videos = root["videos"] as? List<Map<String, Any?>> ?: emptyList()
 
