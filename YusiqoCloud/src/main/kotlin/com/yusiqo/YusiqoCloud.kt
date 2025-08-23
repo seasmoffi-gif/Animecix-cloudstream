@@ -90,7 +90,7 @@ class YusiqoCloud : MainAPI() {
         Log.d("MYAPI", "Loading links for $data")
 
         // Dummy implementation: replace with real API for video sources
-        loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
+        loadExtractor("$mainUrl/", "$mainUrl/", subtitleCallback, callback)
             
         return true
     }
