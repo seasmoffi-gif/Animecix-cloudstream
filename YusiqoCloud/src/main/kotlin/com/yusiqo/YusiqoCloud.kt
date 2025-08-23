@@ -9,7 +9,7 @@ import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 
-class MyAnimeAPI : MainAPI() {
+class YusiqoCloud : MainAPI() {
     override var mainUrl              = "http://localhost:3000"  // change to your deployed URL
     override var name                 = "MyAnimeAPI"
     override val hasMainPage          = true
