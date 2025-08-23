@@ -90,16 +90,8 @@ class YusiqoCloud : MainAPI() {
         Log.d("MYAPI", "Loading links for $data")
 
         // Dummy implementation: replace with real API for video sources
-        callback(
-            ExtractorLink(
-                source = "MyAPI",
-                name = "Test Stream",
-                url = "https://test-stream.example.com/video.mp4",
-                referer = mainUrl,
-                quality = Qualities.Unknown.value,
-                isM3u8 = false
-            )
-        )
+        loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
+            
         return true
     }
 }
