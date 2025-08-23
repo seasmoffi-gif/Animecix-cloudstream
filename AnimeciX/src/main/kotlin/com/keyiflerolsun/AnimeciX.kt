@@ -116,12 +116,6 @@ class AnimeciX : MainAPI() {
                 })
             }
         }
-
-        val ycloud = app.get(
-        "https://not.yusiqo.com/search?keyword=${response.title.title}" 
-        ).parsedSafe<List<Ycloud>>() ?: return null
-
-        val malid = ycloud.firstOrNull()?.id ?: return null
         
         return newTvSeriesLoadResponse(
             response.title.title,
@@ -136,7 +130,7 @@ class AnimeciX : MainAPI() {
             this.rating    = response.title.rating.toRatingInt()
             addActors(response.title.actors.map { Actor(it.name, fixUrlNull(it.poster)) })
             addTrailer(response.title.trailer)
-            addMalId(malid)
+            addMalId(response.title.malid)
         }
     }
 override suspend fun loadLinks(
