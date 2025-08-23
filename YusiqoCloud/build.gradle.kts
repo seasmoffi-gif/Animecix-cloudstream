@@ -1,9 +1,9 @@
 version = 20
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "inatchii", "JustRelaxable")
+    authors     = listOf("yusiqo")
     language    = "tr"
-    description = "AnimeciX, animeleri keşfedebileceğiniz ve animeler hakkında her şeyi öğrenebileceğiniz bir paylaşım platformudur."
+    description = "Dahilinde birçok Fansub Barındıran Özel Servis API (Açık Kaynak) ."
 
     /**
      * Status int as the following:
