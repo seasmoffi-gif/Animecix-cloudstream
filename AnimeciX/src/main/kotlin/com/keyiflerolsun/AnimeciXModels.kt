@@ -44,6 +44,7 @@ data class AnimeSearch(
 
 data class Anime(
     @JsonProperty("id") val id: Int,
+    @JsonProperty("mal_id") val malid: Int, 
     @JsonProperty("title_type") val titleType: String,
     @JsonProperty("name") val title: String,
     @JsonProperty("poster") val poster: String,
