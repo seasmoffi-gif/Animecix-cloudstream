@@ -14,5 +14,5 @@ cloudstream {
     **/
     status  = 1 // will be 3 if unspecified
     tvTypes = listOf("Anime")
-    iconUrl = "https://anm.cx/favicon.ico"
+    iconUrl = "https://i.pinimg.com/564x/0e/33/8e/0e338eb5ba00ebca28d1330cc4902876.jpg"
 }
