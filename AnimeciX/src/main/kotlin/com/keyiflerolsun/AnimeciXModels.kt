@@ -13,6 +13,16 @@ data class Search(
     @JsonProperty("results") val results: List<AnimeSearch>,
 )
 
+// JSON nesnesi için model
+data class Ycloud(
+    @JsonProperty("id")
+    val id: Int,
+    @JsonProperty("title")
+    val title: String,
+    @JsonProperty("poster")
+    val poster: String
+)
+
 data class Title(
     @JsonProperty("title") val title: Anime,
 )
