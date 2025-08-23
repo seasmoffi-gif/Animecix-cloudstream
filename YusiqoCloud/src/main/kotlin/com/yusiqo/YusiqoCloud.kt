@@ -18,8 +18,8 @@ class YusiqoCloud : MainAPI() {
     override val supportedTypes       = setOf(TvType.Anime)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/titles"   to "Anime List",
-        "${mainUrl}/search?q=naruto" to "Sample Search"
+        "${mainUrl}/titles?type=series&page=1"   to "Anime Series",
+        "${mainUrl}/titles?type=movie&page=1"   to "Anime Movies",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -41,7 +41,7 @@ class YusiqoCloud : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val response = app.get("${mainUrl}/search?q=$query").parsedSafe<List<Map<String, Any>>>() ?: return listOf()
+        val response = app.get("${mainUrl}/search?keyword=$query").parsedSafe<List<Map<String, Any>>>() ?: return listOf()
 
         return response.map {
             val id = it["_id"].toString()
