@@ -7,6 +7,7 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+import com.lagradost.cloudstream3.LoadResponse.Companion.addMalId
 
 class AnimeciX : MainAPI() {
     override var mainUrl              = "https://animecix.tv"
@@ -116,7 +117,13 @@ class AnimeciX : MainAPI() {
             }
         }
 
-
+        val ycloud = app.get(
+            "https://not.yusiqo.com/search?keyword=${response.title.title}" 
+            )
+        ).parsedSafe<List<Ycloud>>() ?: return null
+        
+        val malid = ycloud.firstOrNull()?.id ?: return null
+        
         return newTvSeriesLoadResponse(
             response.title.title,
             "${mainUrl}/secure/titles/${response.title.id}?titleId=${response.title.id}",
@@ -130,6 +137,7 @@ class AnimeciX : MainAPI() {
             this.rating    = response.title.rating.toRatingInt()
             addActors(response.title.actors.map { Actor(it.name, fixUrlNull(it.poster)) })
             addTrailer(response.title.trailer)
+            addMalId(malid)
         }
     }
 override suspend fun loadLinks(
