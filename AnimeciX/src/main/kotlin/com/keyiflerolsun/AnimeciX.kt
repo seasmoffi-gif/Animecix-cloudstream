@@ -118,10 +118,9 @@ class AnimeciX : MainAPI() {
         }
 
         val ycloud = app.get(
-            "https://not.yusiqo.com/search?keyword=${response.title.title}" 
-            )
+        "https://not.yusiqo.com/search?keyword=${response.title.title}" 
         ).parsedSafe<List<Ycloud>>() ?: return null
-        
+
         val malid = ycloud.firstOrNull()?.id ?: return null
         
         return newTvSeriesLoadResponse(
