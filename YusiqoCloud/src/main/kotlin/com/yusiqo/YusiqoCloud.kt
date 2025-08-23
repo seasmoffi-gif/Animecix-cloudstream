@@ -10,10 +10,10 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 
 class YusiqoCloud : MainAPI() {
-    override var mainUrl              = "http://localhost:3000"  // change to your deployed URL
-    override var name                 = "MyAnimeAPI"
+    override var mainUrl              = "https://not.yusiqo.com"  // change to your deployed URL
+    override var name                 = "YusiqoCloud"
     override val hasMainPage          = true
-    override var lang                 = "en"
+    override var lang                 = "tr"
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Anime)
 
