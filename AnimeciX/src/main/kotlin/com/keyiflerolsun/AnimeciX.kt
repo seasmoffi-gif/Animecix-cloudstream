@@ -1,5 +1,3 @@
-// ! Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
-
 package com.keyiflerolsun
 
 import android.util.Log
@@ -9,6 +7,24 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.LoadResponse.Companion.addMalId
 
+// --- Basit TTL cache ---
+data class CacheItem<T>(val value: T, val timestamp: Long)
+
+object CacheTTL {
+    private val map = mutableMapOf<String, CacheItem<Any>>()
+    private const val TTL = 1000L * 60 * 5 // 5 dakika
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> get(key: String): T? {
+        val item = map[key] as? CacheItem<T> ?: return null
+        return if (System.currentTimeMillis() - item.timestamp < TTL) item.value else null
+    }
+
+    fun set(key: String, value: Any) {
+        map[key] = CacheItem(value, System.currentTimeMillis())
+    }
+}
+
 class AnimeciX : MainAPI() {
     override var mainUrl              = "https://animecix.tv"
     override var name                 = "AnimeciX"
@@ -17,9 +33,9 @@ class AnimeciX : MainAPI() {
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Anime)
 
-    override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
-    override var sequentialMainPageDelay       = 200L  // ? 0.20 saniye
-    override var sequentialMainPageScrollDelay = 200L  // ? 0.20 saniye
+    override var sequentialMainPage = true
+    override var sequentialMainPageDelay       = 200L
+    override var sequentialMainPageScrollDelay = 200L
 
     override val mainPage = mainPageOf(
         "${mainUrl}/secure/last-episodes"                          to "Son Eklenen Bölümler",
@@ -28,26 +44,25 @@ class AnimeciX : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        return if (request.data.contains("/last-episodes")) {
+        val cacheKey = "mainPage_${request.data}_$page"
+        CacheTTL.get<HomePageResponse>(cacheKey)?.let { return it }
+
+        val home = if (request.data.contains("/last-episodes")) {
             val response = app.get(
                 "${mainUrl}/secure/last-episodes?page=$page&perPage=10",
                 headers = mapOf(
                     "x-e-h" to "7Y2ozlO+QysR5w9Q6Tupmtvl9jJp7ThFH8SB+Lo7NvZjgjqRSqOgcT2v4ISM9sP10LmnlYI8WQ==.xrlyOBFS5BHjQ2Lk"
                 )
             ).parsedSafe<LastEpisodesResponse>()?.data ?: emptyList()
-    
-            val home = response.map {
+
+            response.map {
                 val formattedTitle = "S${it.seasonNumber}B${it.episodeNumber} - ${it.titleName}"
                 newAnimeSearchResponse(
                     formattedTitle,
                     "${mainUrl}/secure/titles/${it.titleId}?titleId=${it.titleId}",
                     TvType.Anime
-                ) {
-                    this.posterUrl = fixUrlNull(it.titlePoster)
-                }
+                ) { this.posterUrl = fixUrlNull(it.titlePoster) }
             }
-    
-            newHomePageResponse(request.name, home)
         } else {
             val response = app.get(
                 "${request.data}&page=${page}&perPage=16",
@@ -55,44 +70,51 @@ class AnimeciX : MainAPI() {
                     "x-e-h" to "7Y2ozlO+QysR5w9Q6Tupmtvl9jJp7ThFH8SB+Lo7NvZjgjqRSqOgcT2v4ISM9sP10LmnlYI8WQ==.xrlyOBFS5BHjQ2Lk"
                 )
             ).parsedSafe<Category>()
-    
-            val home = response?.pagination?.data?.map { anime ->
+
+            response?.pagination?.data?.map { anime ->
                 newAnimeSearchResponse(
                     anime.title,
                     "${mainUrl}/secure/titles/${anime.id}?titleId=${anime.id}",
                     TvType.Anime
-                ) {
-                    this.posterUrl = fixUrlNull(anime.poster)
-                }
+                ) { this.posterUrl = fixUrlNull(anime.poster) }
             } ?: listOf()
-    
-            newHomePageResponse(request.name, home)
         }
+
+        val homePageResponse = newHomePageResponse(request.name, home)
+        CacheTTL.set(cacheKey, homePageResponse)
+        return homePageResponse
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        val cacheKey = "search_$query"
+        CacheTTL.get<List<SearchResponse>>(cacheKey)?.let { return it }
+
         val response = app.get("${mainUrl}/secure/search/${query}?limit=20").parsedSafe<Search>() ?: return listOf()
 
-        return response.results.map { anime ->
+        val result = response.results.map { anime ->
             newAnimeSearchResponse(
                 anime.title,
                 "${mainUrl}/secure/titles/${anime.id}?titleId=${anime.id}",
                 TvType.Anime
-            ) {
-                this.posterUrl = fixUrlNull(anime.poster)
-            }
+            ) { this.posterUrl = fixUrlNull(anime.poster) }
         }
+
+        CacheTTL.set(cacheKey, result)
+        return result
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
+        CacheTTL.get<LoadResponse>(url)?.let { return it }
+
         val response = app.get(
             url,
             headers = mapOf(
                 "x-e-h" to "7Y2ozlO+QysR5w9Q6Tupmtvl9jJp7ThFH8SB+Lo7NvZjgjqRSqOgcT2v4ISM9sP10LmnlYI8WQ==.xrlyOBFS5BHjQ2Lk"
             )
         ).parsedSafe<Title>() ?: return null
+
         val episodes = mutableListOf<Episode>()
         val titleId  = url.substringAfter("?titleId=")
 
@@ -116,8 +138,8 @@ class AnimeciX : MainAPI() {
                 })
             }
         }
-        
-        return newTvSeriesLoadResponse(
+
+        val loadResponse = newTvSeriesLoadResponse(
             response.title.title,
             "${mainUrl}/secure/titles/${response.title.id}?titleId=${response.title.id}",
             TvType.Anime,
@@ -132,39 +154,42 @@ class AnimeciX : MainAPI() {
             addTrailer(response.title.trailer)
             addMalId(response.title.malid)
         }
+
+        CacheTTL.set(url, loadResponse)
+        return loadResponse
     }
-override suspend fun loadLinks(
-    data: String,
-    isCasting: Boolean,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-): Boolean {
-    Log.d("ACX", "data » $data")
 
-    // data burada direkt API URL'si (örnek: https://animecix.tv/secure/episode-videos-points?titleId=11006&episode=1&season=1)
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val cacheKey = "links_$data"
+        CacheTTL.get<Boolean>(cacheKey)?.let { return it }
 
-    val response = app.get(
-        data,
-        referer = "$mainUrl/"
-    )
+        Log.d("ACX", "data » $data")
 
-    // JSON'u güvenli şekilde parse et
-    val root = response.parsedSafe<Map<String, Any?>>() ?: return false
+        val response = app.get(
+            data,
+            referer = "$mainUrl/"
+        )
 
-    val videos = root["videos"] as? List<Map<String, Any?>> ?: emptyList()
+        val root = response.parsedSafe<Map<String, Any?>>() ?: return false
+        val videos = root["videos"] as? List<Map<String, Any?>> ?: emptyList()
 
-    for (video in videos) {
-        val url = video["url"] as? String ?: continue
-        if (url.isNotBlank()) {
-            Log.d("ACX", "Video URL bulundu: $url")
-            try {
-                loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
-            } catch (e: Exception) {
-                Log.e("ACX", "Extractor yüklenemedi: ${e.message}")
+        for (video in videos) {
+            val url = video["url"] as? String ?: continue
+            if (url.isNotBlank()) {
+                try {
+                    loadExtractor(url, "$mainUrl/", subtitleCallback, callback)
+                } catch (e: Exception) {
+                    Log.e("ACX", "Extractor yüklenemedi: ${e.message}")
+                }
             }
         }
-    }
 
-    return true
-}
+        CacheTTL.set(cacheKey, true)
+        return true
+    }
 }
