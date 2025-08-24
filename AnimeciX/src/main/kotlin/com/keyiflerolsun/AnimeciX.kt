@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.LoadResponse.Companion.addMalId
 
 class AnimeciX : MainAPI() {
-    override var mainUrl              = "https://animecix.tv"
+    override var mainUrl              = "https://simple-proxy-rho-umber.vercel.app/https://animecix.tv"
     override var name                 = "AnimeciX"
     override val hasMainPage          = true
     override var lang                 = "tr"
