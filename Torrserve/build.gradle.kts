@@ -3,7 +3,7 @@ version = 20
 cloudstream {
     authors     = listOf("yusiqo")
     language    = "tr"
-    description = "Dahilinde birçok Fansub Barındıran Özel Servis API (Açık Kaynak) ."
+    description = "Torrserve Uygulaması/Sunucusu için istemci eklentisi."
 
     /**
      * Status int as the following:
